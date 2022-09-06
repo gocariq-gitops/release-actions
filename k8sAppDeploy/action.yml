@@ -1,0 +1,56 @@
+name: "Deploy App to Kubernetes"
+
+inputs:
+  google_credentials:
+    required: true
+  google_project_id:
+    required: true
+  k8s_cluster_name:
+    required: true
+  k8s_cluster_region:
+    required: true
+  CQ_APP_NAME:
+    required: true
+  CQ_APP_REPLICA:
+    required: true
+  CQ_APP_IMAGE_PATH:
+    required: true
+  CQ_APP_PORT:
+    required: true
+  CQ_ENV:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - uses: actions/checkout@v2
+      - name: gcp auth
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{inputs.google_project_id}}
+          service_account_key: ${{inputs.google_credentials}}
+      - uses: danielr1996/envsubst-action@1.0.0
+        env:
+          CQ_APP_NAME: ${{inputs.CQ_APP_NAME}}
+          CQ_APP_REPLICA: ${{inputs.CQ_APP_REPLICA}}
+          CQ_APP_IMAGE_PATH: ${{inputs.CQ_APP_IMAGE_PATH}}
+          CQ_APP_PORT: ${{inputs.CQ_APP_PORT}}
+          CQ_ENV: ${{inputs.CQ_ENV}}
+        with:
+          input: k8s/app.yaml.tmpl
+          output: k8s/app.yaml
+      - name: Configure for K8s cluster
+        shell: bash
+        run: |
+          set -x
+          gcloud auth list 
+          gcloud config set compute/region ${{inputs.k8s_cluster_region}}
+          gcloud config set project ${{inputs.google_project_id}}
+          gcloud container clusters get-credentials ${{inputs.k8s_cluster_name}}
+      - name: perform k8s deployment
+        shell: bash
+        run: |
+          set -x
+          ls -lrt k8s/app.yaml
+          cat k8s/app.yaml
+          kubectl apply -f k8s/app.yaml

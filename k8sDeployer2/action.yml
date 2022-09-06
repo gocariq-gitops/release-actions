@@ -1,0 +1,46 @@
+  name: "Deploy App to Kubernetes"
+
+  inputs:
+    google_credentials:
+      required: true
+    google_project_id:
+      required: true
+    k8s_cluster_name:
+      required: true
+    k8s_cluster_region:
+      required: true
+    app_name:
+      description: "application name"
+      required: true
+    git_sha:
+      description: "expected git sha"
+      required: true
+    max_attempt:
+      description: "max health check retry"
+      required: false
+    sleep_time:
+      description: "sleep between retries"
+      required: false
+
+  runs:
+    using: "composite"
+    steps:
+        - uses: actions/checkout@v2
+        - name: gcp auth
+          uses: google-github-actions/setup-gcloud@v0.5.0
+          with:
+            project_id: ${{inputs.google_project_id}}
+            service_account_key: ${{inputs.google_credentials}}
+        - name: Configure for K8s cluster
+          shell: bash
+          run: |
+            set -x
+            gcloud config set project ${{inputs.google_project_id}}
+            gcloud auth list 
+            gcloud config set compute/region ${{inputs.k8s_cluster_region}}
+            gcloud config set project ${{inputs.google_project_id}}
+            gcloud container clusters get-credentials ${{inputs.k8s_cluster_name}}
+        - name: perform deployment validation
+          shell: bash
+          run: |
+            ./script.py -a ${{inputs.app_name}} -g ${{inputs.git_sha}} -s ${{inputs.sleet_time}} -m ${{inputs.sleep_time}}

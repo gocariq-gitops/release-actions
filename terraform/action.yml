@@ -1,0 +1,38 @@
+name: "Terraform init/plan/apply"
+description: "Build a container image and Pushes it to Docker registry"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  terraform_code_path:
+    description: "Path to terraform scripts to apply"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - uses: actions/checkout@v2
+      - name: Terraform Setup
+        uses: hashicorp/setup-terraform@v1
+      - name: Terraform Init
+        shell: bash
+        run: |
+          cd terraform/env/playground
+          terraform init
+        env:
+          GOOGLE_CREDENTIALS: ${{inputs.google_credentials}}
+      - name: Terraform Plan
+        shell: bash
+        run: |
+          cd ${{inputs.terraform_code_path}}
+          terraform plan
+        env:
+          GOOGLE_CREDENTIALS: ${{inputs.google_credentials}}
+      - name: Terraform Apply
+        shell: bash
+        run: |
+          cd terraform/env/playground
+          terraform apply -auto-approve
+        env:
+          GOOGLE_CREDENTIALS: ${{inputs.google_credentials}}

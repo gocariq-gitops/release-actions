@@ -1,0 +1,18 @@
+name: "Docker Tagging"
+description: "Tag Docker image with Git SHA"
+
+runs:
+  using: "composite"
+  steps:
+      - name: Generate GIT SHA for Docker image tagging
+        shell: bash
+        run: |
+          set -x
+          # GITHUB_HEAD_REF is set only for PRs
+          if [[ -n $GITHUB_HEAD_REF ]]; then
+            GITHUB_SHA=${{github.event.pull_request.head.sha}}
+          fi
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo SHORT_SHA=${GITHUB_SHA:0:7} >> $GITHUB_ENV
+
+          

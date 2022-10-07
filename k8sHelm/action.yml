@@ -1,0 +1,38 @@
+name: "Helm package, push & install"
+description: "Helm package, push & install"
+
+runs:
+  using: "composite"
+  steps:
+      - uses: google-github-actions/auth@v0
+        with:
+          credentials_json: '${{ secrets.GKE_PUSHER_CREDENTIALS }}'
+
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          version: latest
+
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v0'
+        with:
+          cluster_name: 'cariq-stage'
+          location: 'us-central1'
+
+      - name: login to artifact registry
+        run: |
+          gcloud auth configure-docker ${{ secrets.ARTIFACT_REGISTRY_HOST_NAME }} --quiet
+          
+      - name: helm package
+        run: |
+          helm dependency build ./charts/$CHART_NAME/
+          helm package ./charts/$CHART_NAME/ --version $IMAGE_TAG
+      
+      - name: helm push
+        #         if: ${{ github.event_name == 'push' }}
+        run: |
+          helm push $CHART_NAME-$IMAGE_TAG.tgz oci://${{secrets.ARTIFACT_REGISTRY_HOST_NAME}}/${{env.PROJECT_ID}}/${{env.REGISTRY_NAME}}
+      
+      - name: helm deploy
+        #         if: ${{ github.event_name == 'push' }}
+        run: |
+          helm upgrade --install ${{env.CHART_NAME}} oci://${{secrets.ARTIFACT_REGISTRY_HOST_NAME}}/${{env.PROJECT_ID}}/${{env.REGISTRY_NAME}}/${{env.CHART_NAME}} -f ./charts/$CHART_NAME/values.yaml --version ${{env.IMAGE_TAG}}

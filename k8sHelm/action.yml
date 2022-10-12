@@ -6,7 +6,7 @@ runs:
   steps:
       - uses: google-github-actions/auth@v0
         with:
-          credentials_json: '${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}'
+          credentials_json: '${{ inputs.google_credentials }}'
 
       - uses: google-github-actions/setup-gcloud@v0
         with:
@@ -22,7 +22,7 @@ runs:
         shell: bash
         run: |
           set -x
-          gcloud auth configure-docker ${{ secrets.ARTIFACT_REGISTRY_HOST_NAME }} --quiet
+          gcloud auth configure-docker ${{ inputs.REGISTRY_NAME }} --quiet
           
       - name: helm package
         shell: bash
@@ -36,11 +36,11 @@ runs:
         shell: bash
         run: |
           set -x
-          helm push $CHART_NAME-$IMAGE_TAG.tgz oci://${{secrets.ARTIFACT_REGISTRY_HOST_NAME}}/${{env.PROJECT_ID}}/${{env.REGISTRY_NAME}}
+          helm push $CHART_NAME-$IMAGE_TAG.tgz oci://${{inputs.REGISTRY_NAME}}/${{inputs.PROJECT_ID}}/${{inputs.REGISTRY_NAME}}
       
       - name: helm deploy
         #         if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -x
-          helm upgrade --install ${{env.CHART_NAME}} oci://${{secrets.ARTIFACT_REGISTRY_HOST_NAME}}/${{env.PROJECT_ID}}/${{env.REGISTRY_NAME}}/${{env.CHART_NAME}} -f ./charts/$CHART_NAME/values.yaml --version ${{env.IMAGE_TAG}}
+          helm upgrade --install ${{env.CHART_NAME}} oci://${{inputs.REGISTRY_NAME}}/${{inputs.PROJECT_ID}}/${{inputs.REGISTRY_NAME}}/${{inputs.CHART_NAME}} -f ./charts/$CHART_NAME/values.yaml --version ${{inputs.IMAGE_TAG}}

@@ -1,6 +1,8 @@
 name: "Helm package, push & install"
 description: "Helm package, push & install"
 
+
+
 runs:
   using: "composite"
   steps:
@@ -29,8 +31,8 @@ runs:
         shell: bash
         run: |
           set -x
-          helm dependency build ./charts/$CHART_NAME/
-          helm package ./charts/$CHART_NAME/ --version $IMAGE_TAG
+          helm dependency build ./charts/${{ inputs.CHART_NAME }}/
+          helm package ./charts/${{ inputs.CHART_NAME }}/ --version ${{inputs.IMAGE_TAG}}
       
       - name: helm push
         #         if: ${{ github.event_name == 'push' }}

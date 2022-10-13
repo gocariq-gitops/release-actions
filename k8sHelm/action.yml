@@ -17,7 +17,7 @@ runs:
         with:
           cluster_name: 'cariq-stage'
           location: 'us-central1'
-          credentials_json: '${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}'
+          credentials_json: '${{ inputs.google_credentials }}'
 
       - name: login to artifact registry
         shell: bash

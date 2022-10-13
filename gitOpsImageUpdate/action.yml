@@ -1,5 +1,6 @@
 name: "GitOps Image update"
 description: "Update the Docker Image tag and push to source git"
+permissions: write-all
 
 inputs:
   gitSha:

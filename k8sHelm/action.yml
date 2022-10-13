@@ -8,7 +8,7 @@ runs:
   steps:
       - uses: google-github-actions/auth@v0
         with:
-          credentials_json: '${{ inputs.google_credentials }}'
+          credentials_json: '${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}'
 
       - uses: google-github-actions/setup-gcloud@v0
         with:
@@ -19,7 +19,7 @@ runs:
         with:
           cluster_name: 'cariq-stage'
           location: 'us-central1'
-          credentials_json: '${{ inputs.google_credentials }}'
+          credentials_json: '${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}'
 
       - name: login to artifact registry
         shell: bash

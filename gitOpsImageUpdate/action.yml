@@ -1,13 +1,18 @@
 name: "GitOps Image update"
 description: "Update the Docker Image tag and push to source git"
 
+inputs:
+  gitSha:
+    description: "git commit sha"
+    required: true
+
 runs:
   using: "composite"
   steps:
       - name: update your current version of docker image tag
         uses: mikefarah/yq@v4.28.1
         with:
-          cmd: yq -i '.monochart.image.tag = "${{ env.gitSha }}"' './charts/infra-tools/values.yaml'
+          cmd: yq -i '.monochart.image.tag = "${{ inputs.gitSha }}"' './charts/infra-tools/values.yaml'
       - name: Print branch name
         if: github.event_name == 'pull_request'
         shell: bash
@@ -21,7 +26,7 @@ runs:
           git config user.name "gocariq-gitops"
           git config user.email "gocariq-gitops@gocariq.com"
           git add ./charts/infra-tools/values.yaml
-          git commit -m "update code version to ${{ env.gitSha }}"
+          git commit -m "update code version to ${{ inputs.gitSha }}"
       - name: Git push merged
         if: github.event_name == 'push'
         shell: bash

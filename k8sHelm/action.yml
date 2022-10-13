@@ -11,6 +11,9 @@ inputs:
   registry_name:
     description: "Docker File Path"
     required: true
+  registry_host_name:
+    description: "Docker File Path"
+    required: true
   project_id:
     description: "Docker Image Name"
     required: true
@@ -51,7 +54,7 @@ runs:
         shell: bash
         run: |
           set -x
-          gcloud auth configure-docker ${{ inputs.registry_name }} --quiet
+          gcloud auth configure-docker ${{ inputs.registry_host_name }} --quiet
           
       - name: helm package
         shell: bash
@@ -65,11 +68,11 @@ runs:
         shell: bash
         run: |
           set -x
-          helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_name}}/${{inputs.project_id}}/${{inputs.registry_name}}
+          helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}
       
       - name: helm deploy
         #         if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -x
-          helm upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values.yaml --version ${{inputs.image_tag}}
+          helm upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values.yaml --version ${{inputs.image_tag}}

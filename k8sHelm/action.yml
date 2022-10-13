@@ -1,6 +1,32 @@
 name: "Helm package, push & install"
 description: "Helm package, push & install"
 
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  image_tag:
+    description: "Google Project Id"
+    required: true
+  registry_name:
+    description: "Docker File Path"
+    required: true
+  project_id:
+    description: "Docker Image Name"
+    required: true
+  gke_google_credentials:
+    description: "Docker Repo Name"
+    required: true
+  cluster_name:
+    description: "Google Credentials"
+    required: true
+  location:
+    description: "Google Credentials"
+    required: true
+  chart_name:
+    description: "Google Credentials"
+    required: true
+
 
 
 runs:
@@ -8,7 +34,7 @@ runs:
   steps:
       - uses: google-github-actions/auth@v0
         with:
-          credentials_json: '${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}'
+          credentials_json: '${{ inputs.gke_google_credentials }}'
 
       - uses: google-github-actions/setup-gcloud@v0
         with:
@@ -19,31 +45,31 @@ runs:
         with:
           cluster_name: 'cariq-stage'
           location: 'us-central1'
-          credentials_json: '${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}'
+          credentials_json: '${{ inputs.gke_google_credentials }}'
 
       - name: login to artifact registry
         shell: bash
         run: |
           set -x
-          gcloud auth configure-docker ${{ inputs.REGISTRY_NAME }} --quiet
+          gcloud auth configure-docker ${{ inputs.registry_name }} --quiet
           
       - name: helm package
         shell: bash
         run: |
           set -x
-          helm dependency build ./charts/${{ inputs.CHART_NAME }}/
-          helm package ./charts/${{ inputs.CHART_NAME }}/ --version ${{inputs.IMAGE_TAG}}
+          helm dependency build ./charts/${{ inputs.chart_name }}/
+          helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.image_tag}}
       
       - name: helm push
         #         if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -x
-          helm push $CHART_NAME-$IMAGE_TAG.tgz oci://${{inputs.REGISTRY_NAME}}/${{inputs.PROJECT_ID}}/${{inputs.REGISTRY_NAME}}
+          helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_name}}/${{inputs.project_id}}/${{inputs.registry_name}}
       
       - name: helm deploy
         #         if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -x
-          helm upgrade --install ${{env.CHART_NAME}} oci://${{inputs.REGISTRY_NAME}}/${{inputs.PROJECT_ID}}/${{inputs.REGISTRY_NAME}}/${{inputs.CHART_NAME}} -f ./charts/$CHART_NAME/values.yaml --version ${{inputs.IMAGE_TAG}}
+          helm upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values.yaml --version ${{inputs.image_tag}}

@@ -54,4 +54,4 @@ runs:
         shell: bash
         run: |
           set -x
-          helm -n ${{inputs.branch_name}} upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values-${{GITHUB_HEAD_REF}}.yaml --version ${{inputs.image_tag}}
+          helm -n ${{inputs.branch_name}} upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values-${{inputs.branch_name}}.yaml --version ${{inputs.image_tag}}

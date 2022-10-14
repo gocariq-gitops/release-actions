@@ -74,9 +74,9 @@ runs:
           location: 'us-central1'
           credentials_json: '${{ inputs.gke_google_credentials }}'
       
-      #- name: helm deploy
-        #         if: ${{ github.event_name == 'push' }}
-        #shell: bash
-        #run: |
-          #set -x
-          #helm upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values.yaml --version ${{inputs.image_tag}}
+      - name: helm deploy
+                 if: ${{ github.event_name == 'push' }}
+        shell: bash
+        run: |
+          set -x
+          helm -n ${{GITHUB_HEAD_REF}} upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values-${{GITHUB_HEAD_REF}}.yaml --version ${{inputs.image_tag}}

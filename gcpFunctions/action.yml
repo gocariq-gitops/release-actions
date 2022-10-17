@@ -5,6 +5,9 @@ inputs:
   google_credentials:
     description: "Google Credentials"
     required: true
+  name:
+    description: "name of function"
+    required: true
   project_id:
     description: "Google Cloud Project ID"
     required: true
@@ -14,13 +17,13 @@ inputs:
   http_trigger:
     description: "Boolean - HTTP Trigger enabled?"
     required: true
-  source:
+  source_dir:
     description: "Path of source code"
     required: true
   runtime:
     description: "Function runtime"
     required: true
-  entrypoint:
+  entry_point:
     description: "Entrypoint main function"
     required: true
 
@@ -43,6 +46,6 @@ runs:
           set -x
           if [[ ${{inputs.http_trigger}} eq "true" ]]
           then
-            gcloud functions deploy console-report-downloads --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source}} --entry-point ${{inputs.entrypoint}} --region ${{inputs.region}} --trigger-http
+            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --trigger-http
           else
-            gcloud functions deploy console-report-downloads --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source}} --entry-point ${{inputs.entrypoint}} --region ${{inputs.region}}
+            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}}

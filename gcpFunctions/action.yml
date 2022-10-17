@@ -44,8 +44,8 @@ runs:
         shell: bash
         run: |
           set -x
-          if [[ ${{inputs.http_trigger}} eq "true" ]]
-          then
-            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --trigger-http
-          else
-            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}}
+          #if [[ ${{inputs.http_trigger}} eq "true" ]]
+          #then
+          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --trigger-http
+          #else
+          #gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}}

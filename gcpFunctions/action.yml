@@ -1,0 +1,51 @@
+name: "Helm package, push & install"
+description: "Helm package, push & install"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  name:
+    description: "name of function"
+    required: true
+  project_id:
+    description: "Google Cloud Project ID"
+    required: true
+  region:
+    description: "Google Cloud Region"
+    required: true
+  http_trigger:
+    description: "Boolean - HTTP Trigger enabled?"
+    required: true
+  source_dir:
+    description: "Path of source code"
+    required: true
+  runtime:
+    description: "Function runtime"
+    required: true
+  entry_point:
+    description: "Entrypoint main function"
+    required: true
+
+
+
+runs:
+  using: "composite"
+  steps:
+      - uses: google-github-actions/auth@v0
+        with:
+          credentials_json: '${{ inputs.google_credentials }}'
+
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          version: latest
+
+      - name: login to artifact registry
+        shell: bash
+        run: |
+          set -x
+          #if [[ ${{inputs.http_trigger}} eq "true" ]]
+          #then
+          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --trigger-http
+          #else
+          #gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}}

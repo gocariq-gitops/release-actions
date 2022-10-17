@@ -49,14 +49,9 @@ runs:
           location: ${{ inputs.location }}
           credentials_json: '${{ inputs.gke_google_credentials }}'
 
-      # - name: Extract branch name
-      #   shell: bash
-      #   run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-      #   id: extract_branch
-
       - name: helm deploy
         #if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -x
-          helm -n ${{ inputs.branch }} upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values-${{inputs.branch_name}}.yaml --version ${{inputs.image_tag}}
+          helm -n ${{ inputs.branch_name }} upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values-${{inputs.branch_name}}.yaml --version ${{inputs.image_tag}}

@@ -34,7 +34,7 @@ runs:
         run: |
           set -x
           git config --global gpg.format ssh
-          git config --global user.signingKey '${{ inputs.gitSignKey }}'
+          git config --global user.signingKey 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDbsGMQ+dI8mFALS5yOVf7ypkhrewqcyuv524jHnjkTBq3M4mnBv2Z3pbyBrsbtBjhMp703p3x4Ni9R3Ou3WDr31d62bV5dN/YhwipVC3phFXJhP0KyLU6Cr5lhi+YUlVV8zLWV4eq3CShEoWuy5Jexn4V8cvek+FhY9aN6axe6ghu2UzOeg1cYYBGyqaJd3q54MWKQSXTroaanUlcV+xw9FgvL6MWZ4gaecJAhQE63FqvEYvzab3oXb1J6kV0UqXnps8CCTl6K1Y9Vfbs0lAIE791aRymPOgJu2OljOvMzN2l6OpmrsGFtMnvOYq3JUtMxiihcFP7cnhOr1/2Iq4yC0S1EsbOPBlsrjGXYKyVdkZ6VX9j06b4BAb9QuSgf1mV1nB9JIEGKfMH63FRIt28QUir/M45A3KXTc2ShYKvcjTyCbGkJ4k9Q6njyftqUDtMFJl+WsgKbuTo4WXoegakxO7CEiWiKX0lkJF2L7qjPQIypdnLO0mxEExCpCkFcKHU= chitrangadhpisati@chitrangadhsMBP.attlocal.net'
           git config user.name "gocariq-gitops"
           git config user.email "gocariq-gitops@gocariq.com"
           git add ./charts/${{ inputs.appName }}/values-${{ inputs.branchName }}.yaml

@@ -6,6 +6,9 @@ inputs:
   gitSha:
     description: "git commit sha"
     required: true
+  gitSignKey:
+    description: "git signing ssh key"
+    required: true
   appName:
     description: "app name"
     required: true
@@ -30,6 +33,8 @@ runs:
         shell: bash
         run: |
           set -x
+          git config --global gpg.format ssh
+          git config --global user.signingKey '${{ inputs.gitSignKey }}'
           git config user.name "gocariq-gitops"
           git config user.email "gocariq-gitops@gocariq.com"
           git add ./charts/${{ inputs.appName }}/values-${{ inputs.branchName }}.yaml

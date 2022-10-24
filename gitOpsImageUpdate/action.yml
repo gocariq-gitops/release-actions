@@ -33,7 +33,7 @@ runs:
           git config user.name "gocariq-gitops"
           git config user.email "gocariq-gitops@gocariq.com"
           git add ./charts/${{ inputs.appName }}/values-${{ inputs.branchName }}.yaml
-          git commit -m "update code version to ${{ inputs.gitSha }}"
+          git commit -S -m "update code version to ${{ inputs.gitSha }}"
       - name: Git push merged
         if: github.event_name == 'push'
         shell: bash

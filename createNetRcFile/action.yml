@@ -1,0 +1,15 @@
+name: "Docker Build and Push"
+description: "Build Docker image and Push to GCR"
+
+inputs:
+  github_auth_token:
+    description: "Personal Access Token for gitops user"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - name: Create file for GitHub Auth Token
+        shell: bash
+        run: |
+           "printf "machine github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n\nmachine machine api.github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n\n" > ~/.netrc"

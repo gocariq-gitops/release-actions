@@ -13,7 +13,7 @@ runs:
         shell: bash
         run: |
            pwd
-           echo "machine github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n\n\nmachine api.github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n" > .netrc
+           printf "machine github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n\n\nmachine api.github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n" > .netrc
            echo "created .netrc"
            cat .netrc
            echo "lines in file"

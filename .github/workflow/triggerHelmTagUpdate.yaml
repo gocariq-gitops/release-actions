@@ -1,4 +1,4 @@
-name: Update helm chart tag
+name: Test update helm chart tag
 'on':
   workflow_dispatch:
     inputs:

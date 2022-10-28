@@ -1,4 +1,7 @@
 name: Test update helm chart tag
+permissions: write-all
+
+
 'on':
   workflow_dispatch:
     inputs:

@@ -1,0 +1,18 @@
+name: "Find Applications"
+description: "fetches apps from applications.yaml"
+
+runs:
+  using: "composite"
+  steps:
+      - uses: mikefarah/yq@master
+      - name: find applications
+        shell: bash
+        run: |
+             set -x
+             which yq
+             yq -o=json '.' applications.yaml > applications.json
+             cat applications.json
+             matrix=$(jq -r '.[].name' applications.json | sed -e 's/\(.*\)/"\1"/g' | tr  '\n' ','| sed 's/,$//')
+             echo "[$matrix]"
+             echo "REPO_APPS=$matrix" >> $GITHUB_ENV
+

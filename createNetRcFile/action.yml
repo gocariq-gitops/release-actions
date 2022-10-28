@@ -2,8 +2,17 @@ name: "Docker Build and Push"
 description: "Build Docker image and Push to GCR"
 
 inputs:
-  github_auth_token:
-    description: "Personal Access Token for gitops user"
+  appName:
+    description: "Name of the application for which tag will be changed"
+    required: true
+  deployEnv:
+    description: "Deploy Env"
+    required: true
+  tag:
+    description: "deploy sha, gittag"
+    required: true
+  ghaToken:
+    description: "Personal github token"
     required: true
 
 runs:
@@ -12,11 +21,8 @@ runs:
       - name: Create file for GitHub Auth Token
         shell: bash
         run: |
-           pwd
-           printf "machine github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n\n\nmachine api.github.com\nlogin gocariq-gitops\npassword ${{inputs.github_auth_token}}\n" > .netrc
-           echo "created .netrc"
-           cat .netrc
-           echo "lines in file"
-           cat .netrc | wc -l
-           ls -al
-           pwd
+          curl --location --request POST 'https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches' \
+          --header 'Accept: application/vnd.github.everest-preview+json' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{inputs.ghaToken}}' \
+          --data-raw '{"ref": "main", "inputs":{"appName":"${{inputs.appName}}", "deployEnv":"${{inputs.deployEnv}}", "tag":"${{inputs.tag}}'

@@ -1,4 +1,6 @@
 name: Trigger Deploy and wait
+permissions: write-all
+
 description: This action trigger deployment
 inputs:
   authToken:

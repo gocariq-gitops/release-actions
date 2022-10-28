@@ -25,5 +25,5 @@ runs:
           curl -v location --request POST 'https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches' \
           --header 'Accept: application/vnd.github.everest-preview+json' \
           --header 'Content-Type: application/json' \
-          --header 'Authorization: token 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' \
+          --header 'Authorization: token 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' \
           --data-raw '{"ref": "main", "inputs":{"appName":"adapters", "deployEnv":"dev", "tag":"1234567" }}'

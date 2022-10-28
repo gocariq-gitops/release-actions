@@ -22,7 +22,8 @@ runs:
         shell: bash
         run: |
           echo ${{inputs.ghaToken}}
-          curl -v -XPOST -H 'Accept: application/vnd.github.everest-preview+json' \
-          -H 'Content-Type: application/json' \
-          -H 'Authorization: token ${{inputs.ghaToken}}'\
-          -d ''{"ref": "main", "inputs":{"appName":"${{inputs.appName}}", "deployEnv":"${{inputs.deployEnv}}", "tag":"${{inputs.tag}}''\ 'https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches'
+          curl -v location --request POST 'https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches' \
+          --header 'Accept: application/vnd.github.everest-preview+json' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: token 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' \
+          --data-raw '{"ref": "main", "inputs":{"appName":"adapters", "deployEnv":"dev", "tag":"1234567" }}'

@@ -15,6 +15,8 @@ wait_max_attempt = 120
 
 if token is None:
     sys.exit("Token is not set")
+else:
+    logging.info("this is token: {0}".format(token))
 
 url_trigger = "https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches"
 payload = json.dumps({

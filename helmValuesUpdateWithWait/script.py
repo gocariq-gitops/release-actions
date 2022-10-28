@@ -13,6 +13,9 @@ branch = os.environ['INPUT_DEPLOYENV']
 appName = os.environ['INPUT_APPNAME']
 wait_max_attempt = 120
 
+if token is None:
+    sys.exit("Token is not set")
+
 url_trigger = "https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches"
 payload = json.dumps({
     "ref": "main",

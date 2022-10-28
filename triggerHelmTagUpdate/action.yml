@@ -1,18 +1,29 @@
-name: "Find Applications"
-description: "fetches apps from applications.yaml"
+name: "Docker Build and Push"
+description: "Build Docker image and Push to GCR"
+
+inputs:
+  appName:
+    description: "Name of the application for which tag will be changed"
+    required: true
+  deployEnv:
+    description: "Deploy Env"
+    required: true
+  tag:
+    description: "deploy sha, gittag"
+    required: true
+  ghaToken:
+    description: "Personal github token"
+    required: true
 
 runs:
   using: "composite"
   steps:
-      - uses: mikefarah/yq@master
-      - name: find applications
+      - name: Create file for GitHub Auth Token
         shell: bash
         run: |
-             set -x
-             which yq
-             yq -o=json '.' applications.yaml > applications.json
-             cat applications.json
-             matrix=$(jq -r '.[].name' applications.json | sed -e 's/\(.*\)/"\1"/g' | tr  '\n' ','| sed 's/,$//')
-             echo "[$matrix]"
-             echo "REPO_APPS=$matrix" >> $GITHUB_ENV
-
+          set -x
+          curl --location --request POST 'https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches' \
+          --header 'Accept: application/vnd.github.everest-preview+json' \
+          --header 'Content-Type: application/json' \
+          --header 'Authorization: Bearer ${{inputs.ghaToken}}' \
+          --data-raw '{"ref": "main", "inputs":{"appName":"${{inputs.appName}}", "deployEnv":"${{inputs.deployEnv}}", "tag":"${{inputs.tag}}'

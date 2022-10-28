@@ -10,6 +10,10 @@ inputs:
   tag:
     required: true
     description: git sha which should be deployed
+  appName:
+    required: true
+    description: app name to be deployed
+
 
 runs:
   using: docker

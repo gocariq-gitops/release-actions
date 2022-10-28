@@ -21,9 +21,8 @@ runs:
       - name: Create file for GitHub Auth Token
         shell: bash
         run: |
-          echo ${{inputs.ghaToken}}
           curl -v location --request POST 'https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches' \
           --header 'Accept: application/vnd.github.everest-preview+json' \
           --header 'Content-Type: application/json' \
-          --header 'Authorization: token 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' \
+          --header 'Authorization: token ${inpputs.ghaToken}' \
           --data-raw '{"ref": "main", "inputs":{"appName":"adapters", "deployEnv":"dev", "tag":"1234567" }}'

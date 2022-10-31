@@ -17,6 +17,8 @@ inputs:
   docker_repo_name:
     description: "Docker Repo Name"
     required: true
+  docker_params:
+    description: "Docker build params"
 
 runs:
   using: "composite"
@@ -53,7 +55,7 @@ runs:
           docker images
           
           cd ${{inputs.docker_file_path}}
-          DOCKER_BUILDKIT=1 docker build -t "$IMAGE1" -t "$IMAGE2" .
+          DOCKER_BUILDKIT=1 docker build ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
           cd -
           docker images
 

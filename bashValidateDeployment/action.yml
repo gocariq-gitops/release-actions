@@ -19,10 +19,10 @@ inputs:
     required: true
   max_attempt:
     description: "Max check attempt"
-    default: 30
+    required: true
   sleep_time:
     description: "Docker Repo Name"
-    default: 10
+    required: true
 
 runs:
   using: "composite"

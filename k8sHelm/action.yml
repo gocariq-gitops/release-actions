@@ -20,9 +20,6 @@ inputs:
   gke_google_credentials:
     description: "Docker Repo Name"
     required: true
-  cluster_name:
-    description: "Google Credentials"
-    required: true
   location:
     description: "Google Credentials"
     required: true
@@ -62,14 +59,3 @@ runs:
         run: |
           set -x
           helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}
-          
-#      - uses: google-github-actions/auth@v0
-#        with:
-#          credentials_json: '${{ inputs.gke_google_credentials }}'
-
-#      - id: 'get-credentials'
-#        uses: 'google-github-actions/get-gke-credentials@v0'
-#        with:
-#          cluster_name: 'cariq-stage'
-#          location: 'us-central1'
-#          credentials_json: '${{ inputs.gke_google_credentials }}'

@@ -1,4 +1,4 @@
-name: Test update helm chart tag
+name: Test validate deployment
 permissions: write-all
 
 

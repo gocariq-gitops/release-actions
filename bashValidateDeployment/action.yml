@@ -27,16 +27,23 @@ inputs:
 runs:
   using: "composite"
   steps:
+  
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.google_credentials }}'
+          
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: 'cariq-stage'
+          location: 'us-central1'
         # uses: google-github-actions/setup-gcloud@v0.2.0
         # with:
         #   project_id: ${{inputs.google_project_id}}
         #   service_account_key: ${{inputs.google_credentials}}
-      - id: 'get-credentials'
-        uses: 'google-github-actions/get-gke-credentials@v0'
-        with:
-          cluster_name: ${{ inputs.cluster_name }}
-          location: us-central1
-          credentials_json: '${{inputs.google_credentials}}'
+          
+      
 
       - name: Validate Deployment
         shell: bash

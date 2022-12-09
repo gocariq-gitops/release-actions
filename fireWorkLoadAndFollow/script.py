@@ -7,20 +7,23 @@ import json
 import logging
 
 logging.basicConfig(level=logging.INFO)
-token = os.environ['INPUT_TOKEN']
-user = os.environ['INPUT_USER']
-repo = os.environ['INPUT_REPO']
-workflow = os.environ['INPUT_WORKFLOW']
-env = os.environ['INPUT_ENV']
-group = os.environ['INPUT_GROUP']
-branch = os.environ['INPUT_BRANCH']
-wait_max_attempt = 60
-url_trigger = "https://api.github.com/repos/{0}/{1}/actions/workflows/{2}.yaml/dispatches".format(user, repo, workflow)
+token = os.environ['INPUT_AUTHTOKEN']
+gitSha = os.environ['INPUT_TAG']
+targetEnv = os.environ['INPUT_TARGETENV']
+workflowName = os.environ['INPUT_WORKFLOWFILENAME']
+wait_max_attempt = 120
+
+if token is None:
+    sys.exit("Token is not set")
+else:
+    logging.info("this is token: {0}".format(token))
+
+url_trigger = "https://api.github.com/repos/gocariq/environments/actions/{0}.yaml/dispatches".format(workflowName)
 payload = json.dumps({
-    "ref": "{0}".format(branch),
+    "ref": "main",
     "inputs": {
-        "target-env": "{0}".format(env),
-        "test-group": "{0}".format(group),
+        "target-env": "{0}".format(targetEnv ),
+        "tag": "{0}".format(gitSha),
     }
 })
 headers = {
@@ -28,13 +31,13 @@ headers = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer {0}'.format(token)
 }
-url_dispatch = "https://api.github.com/repos/{0}/{1}/actions/runs".format(user, repo)
+url_dispatch = "https://api.github.com/repos/gocariq/payment-automation/actions/runs"
 headersGet = {
     'Accept': 'application/vnd.github.everest-preview+json',
     'Authorization': 'Bearer {0}'.format(token)
 }
 
-logging.info('Dispatching action')
+logging.info('Dispatch helm update action action')
 logging.info(payload)
 response = requests.request("POST", url_trigger, headers=headers, data=payload)
 if response.status_code != 204:
@@ -51,7 +54,7 @@ if response.reason == 'OK':
     workflowId = node['id']
     logging.info("Found build with id {0}".format(workflowId))
     counter = 0
-    url = "https://api.github.com/repos/{0}/{1}/actions/runs/{2}".format(user, repo, workflowId)
+    url = "https://api.github.com/repos/gocariq/payment-automation/actions/runs/{0}".format(workflowId)
     while counter < wait_max_attempt:
         run = requests.request("GET", url, headers=headersGet)
         runJson = run.json()
@@ -66,7 +69,7 @@ if response.reason == 'OK':
             else:
                 logging.info("Run:{0} has been finished with conclusion:{1}".format(run_number, conclusion))
             break
-        time.sleep(15)
+        time.sleep(10)
         counter += 1
 else:
     AssertionError("Failed to fetch run")

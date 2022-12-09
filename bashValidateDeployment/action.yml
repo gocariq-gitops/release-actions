@@ -21,17 +21,24 @@ inputs:
     description: "Max check attempt"
     required: true
   sleep_time:
-    description: "Docker Repo Name"
+    description: "Sleep time"
     required: true
 
 runs:
   using: "composite"
   steps:
       - name: gcp auth
-        uses: google-github-actions/setup-gcloud@v0.2.0
+        # uses: google-github-actions/setup-gcloud@v0.2.0
+        # with:
+        #   project_id: ${{inputs.google_project_id}}
+        #   service_account_key: ${{inputs.google_credentials}}
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v0'
         with:
-          project_id: ${{inputs.google_project_id}}
-          service_account_key: ${{inputs.google_credentials}}
+          cluster_name: ${{ inputs.cluster_name }}
+          location: us-central1
+          credentials_json: '${{inputs.google_credentials}}'
+
       - name: Building docker containers
         shell: bash
         run: |
@@ -47,7 +54,7 @@ runs:
           while [ $COUNTER -le $MAX_ATTEMPT ]
           do
              echo "Welcome $COUNTER times"
-             OUT=$(gcloud container clusters get-credentials cariq-stage --region us-central1 --project $PROJECT_ID  && kubectl get deployment $APP_NAME --namespace $ENV_NAME -o=jsonpath='{.spec.template.spec.containers[0].image}')
+             OUT=$(kubectl get deployment $APP_NAME --namespace $ENV_NAME -o=jsonpath='{.spec.template.spec.containers[0].image}')
              echo $OUT
              ACTUAL_GIT_TAG=${OUT##*:}
              echo "ACTUAL GIT TAG ${ACTUAL_GIT_TAG}"
@@ -62,4 +69,4 @@ runs:
              (( COUNTER++ ))
              sleep $SLEEP_TIME
           done
-          echo "Git tag has not been changed" && exit $IS_DEPLOYMENT_SUCCESS
+          echo "Git tag has not been changed" && exit $IS_DEPLOYMENT_SUCCESS"

@@ -71,4 +71,4 @@ runs:
              (( COUNTER++ ))
              sleep $SLEEP_TIME
           done
-          echo "Git tag has not been changed" && exit $IS_DEPLOYMENT_SUCCESS
+          exit $IS_DEPLOYMENT_SUCCESS

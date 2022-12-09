@@ -55,7 +55,6 @@ runs:
           IS_DEPLOYMENT_SUCCESS=1
           while [ $COUNTER -le $MAX_ATTEMPT ]
           do
-             echo "Welcome $COUNTER times"
              OUT=$(kubectl get deployment $APP_NAME --namespace $ENV_NAME -o=jsonpath='{.spec.template.spec.containers[0].image}')
              echo $OUT
              ACTUAL_GIT_TAG=${OUT##*:}

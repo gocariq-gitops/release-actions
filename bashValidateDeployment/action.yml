@@ -38,10 +38,6 @@ runs:
         with:
           cluster_name: 'cariq-stage'
           location: 'us-central1'
-        # uses: google-github-actions/setup-gcloud@v0.2.0
-        # with:
-        #   project_id: ${{inputs.google_project_id}}
-        #   service_account_key: ${{inputs.google_credentials}}
           
       
 
@@ -75,4 +71,4 @@ runs:
              (( COUNTER++ ))
              sleep $SLEEP_TIME
           done
-          echo "Git tag has not been changed" && exit $IS_DEPLOYMENT_SUCCESS"
+          echo "Git tag has not been changed" && exit $IS_DEPLOYMENT_SUCCESS

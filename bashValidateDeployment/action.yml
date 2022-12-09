@@ -27,7 +27,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-      - name: gcp auth
         # uses: google-github-actions/setup-gcloud@v0.2.0
         # with:
         #   project_id: ${{inputs.google_project_id}}
@@ -39,7 +38,7 @@ runs:
           location: us-central1
           credentials_json: '${{inputs.google_credentials}}'
 
-      - name: Building docker containers
+      - name: Validate Deployment
         shell: bash
         run: |
           set -x

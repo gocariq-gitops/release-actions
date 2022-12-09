@@ -31,7 +31,7 @@ runs:
       - id: 'auth'
         uses: 'google-github-actions/auth@v1'
         with:
-          credentials_json: '${{ secrets.google_credentials }}'
+          credentials_json: '${{ inputs.google_credentials }}'
           
       - id: 'get-credentials'
         uses: 'google-github-actions/get-gke-credentials@v1'

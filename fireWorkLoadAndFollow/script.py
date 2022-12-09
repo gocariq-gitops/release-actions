@@ -18,7 +18,7 @@ if token is None:
 else:
     logging.info("this is token: {0}".format(token))
 
-url_trigger = "https://api.github.com/repos/gocariq/environments/actions/{0}.yaml/dispatches".format(workflowName)
+url_trigger = "https://api.github.com/repos/gocariq/payment-automation/actions/{0}.yaml/dispatches".format(workflowName)
 payload = json.dumps({
     "ref": "main",
     "inputs": {

@@ -3,18 +3,20 @@
 ## Inputs
 ### token
 **Required** - Token of user that will create issue
-### branch
-**Required** - branch name where build should be triggered, main is default value
-### appName
-**Required** - appliation name for which tag shoul be changed
+### targetEnv
+**Required** - env where test needs to be targeted
+### workFlowFileName
+**Required** - Name of the yaml file which needs to be triggered
+### tag
+**Required** - Git tag under the test
 
 
 ## Usages
 ```yaml
-- uses: psingh-cariq/customActions/helmValuesUpdateWithWait@main
-  name: Trigger deploy and wait
-  with:
-    authToken: ${{secrets.GH_AUTH_TOKEN}}
-    deployEnv: branch name which match deploy env
-    tag: gitsha to be deployed
+        uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@main
+        with:
+          authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
+          targetEnv: ${{ steps.branch-name.outputs.current_branch }}
+          tag: ${{ env.SHORT_SHA }}
+          workFlowFileName: core-service-test
 ```

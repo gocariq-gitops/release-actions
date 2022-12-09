@@ -7,10 +7,14 @@ import json
 import logging
 
 logging.basicConfig(level=logging.INFO)
-token = os.environ['INPUT_AUTHTOKEN']
-gitSha = os.environ['INPUT_TAG']
-targetEnv = os.environ['INPUT_TARGETENV']
-workflowName = os.environ['INPUT_WORKFLOWFILENAME']
+#token = os.environ['INPUT_AUTHTOKEN']
+token = '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'
+#gitSha = os.environ['INPUT_TAG']
+gitSha = '33333'
+#targetEnv = os.environ['INPUT_TARGETENV']
+targetEnv = 'dev'
+#workflowName = os.environ['INPUT_WORKFLOWFILENAME']
+workflowName = 'core-service-test'
 wait_max_attempt = 120
 
 if token is None:
@@ -18,11 +22,12 @@ if token is None:
 else:
     logging.info("this is token: {0}".format(token))
 
-url_trigger = "https://api.github.com/repos/gocariq/payment-automation/actions/{0}.yaml/dispatches".format(workflowName)
+url_trigger = "https://api.github.com/repos/gocariq/payment-automation/actions/workflows/{0}.yaml/dispatches".format(workflowName)
+logging.info(url_trigger)
 payload = json.dumps({
     "ref": "main",
     "inputs": {
-        "target-env": "{0}".format(targetEnv ),
+        "target-env": "{0}".format(targetEnv),
         "tag": "{0}".format(gitSha),
     }
 })
@@ -37,7 +42,7 @@ headersGet = {
     'Authorization': 'Bearer {0}'.format(token)
 }
 
-logging.info('Dispatch helm update action action')
+logging.info('Dispatch helm update action')
 logging.info(payload)
 response = requests.request("POST", url_trigger, headers=headers, data=payload)
 if response.status_code != 204:
@@ -64,7 +69,7 @@ if response.reason == 'OK':
         run_number = runJson['run_number']
         if currentStatus == "completed":
             if conclusion != 'success':
-                message = "Run number:{0} concluded with status:{1} with run has been finished".format(run_number, conclusion)
+                message = "Test Run number:{0} concluded with status:{1} with run has been finished".format(run_number, conclusion)
                 assert False, message
             else:
                 logging.info("Run:{0} has been finished with conclusion:{1}".format(run_number, conclusion))

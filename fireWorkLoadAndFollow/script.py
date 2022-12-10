@@ -7,14 +7,10 @@ import json
 import logging
 
 logging.basicConfig(level=logging.INFO)
-#token = os.environ['INPUT_AUTHTOKEN']
-token = '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'
-#gitSha = os.environ['INPUT_TAG']
-gitSha = '33333'
-#targetEnv = os.environ['INPUT_TARGETENV']
-targetEnv = 'dev'
-#workflowName = os.environ['INPUT_WORKFLOWFILENAME']
-workflowName = 'core-service-test'
+token = os.environ['INPUT_AUTHTOKEN']
+gitSha = os.environ['INPUT_TAG']
+targetEnv = os.environ['INPUT_TARGETENV']
+workflowName = os.environ['INPUT_WORKFLOWFILENAME']
 wait_max_attempt = 120
 
 if token is None:

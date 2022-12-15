@@ -41,14 +41,19 @@
           with:
             input: ${{inputs.k8s_yaml_file}}
             output: app.yaml
-        - name: Configure for K8s cluster
-          shell: bash
-          run: |
-            set -x
-            gcloud config set project ${{inputs.google_project_id}}
-            gcloud auth list 
-            gcloud config set compute/region ${{inputs.k8s_cluster_region}}
-            gcloud container clusters get-credentials ${{inputs.k8s_cluster_name}}
+#         - name: Configure for K8s cluster
+#           shell: bash
+#           run: |
+#             set -x
+#             gcloud config set project ${{inputs.google_project_id}}
+#             gcloud auth list 
+#             gcloud config set compute/region ${{inputs.k8s_cluster_region}}
+#             gcloud container clusters get-credentials ${{inputs.k8s_cluster_name}}
+        - id: 'get-credentials'
+          uses: 'google-github-actions/get-gke-credentials@v1'
+          with:
+          cluster_name: ${{inputs.k8s_cluster_name}}
+          location: ${{inputs.k8s_cluster_region}}
         - name: perform k8s deployment
           shell: bash
           run: |

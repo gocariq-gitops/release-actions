@@ -52,6 +52,7 @@
         - id: 'get-credentials'
           uses: 'google-github-actions/get-gke-credentials@v1'
           with:
+            project_id: ${{inputs.google_project_id}}
             cluster_name: ${{inputs.k8s_cluster_name}}
             location: ${{inputs.k8s_cluster_region}}
         - name: perform k8s deployment

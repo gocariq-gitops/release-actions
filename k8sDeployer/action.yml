@@ -25,12 +25,6 @@
   runs:
     using: "composite"
     steps:
-        - uses: actions/checkout@v2
-        - name: gcp auth
-          uses: google-github-actions/setup-gcloud@v0.5.0
-          with:
-            project_id: ${{inputs.google_project_id}}
-            service_account_key: ${{inputs.google_credentials}}
         - uses: danielr1996/envsubst-action@1.0.0
           env:
             CQ_APP_NAME: ${{inputs.CQ_APP_NAME}}
@@ -41,18 +35,13 @@
           with:
             input: ${{inputs.k8s_yaml_file}}
             output: app.yaml
-#         - name: Configure for K8s cluster
-#           shell: bash
-#           run: |
-#             set -x
-#             gcloud config set project ${{inputs.google_project_id}}
-#             gcloud auth list 
-#             gcloud config set compute/region ${{inputs.k8s_cluster_region}}
-#             gcloud container clusters get-credentials ${{inputs.k8s_cluster_name}}
+        - id: 'auth'
+          uses: 'google-github-actions/auth@v1'
+          with:
+            credentials_json: '${{ inputs.google_credentials }}'
         - id: 'get-credentials'
           uses: 'google-github-actions/get-gke-credentials@v1'
           with:
-            project_id: ${{inputs.google_project_id}}
             cluster_name: ${{inputs.k8s_cluster_name}}
             location: ${{inputs.k8s_cluster_region}}
         - name: perform k8s deployment

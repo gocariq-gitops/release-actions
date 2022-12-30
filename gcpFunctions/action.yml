@@ -47,8 +47,7 @@ runs:
       - name: login to artifact registry
         shell: bash
         run: |
-          printf "CARIQ_ENV=dev" > env.yaml
+          printf "CARIQ_ENV: dev" > env.yaml
           cat env.yaml
-          cat env.yaml | wc -l
           echo "invoke gcloud cli"
           gcloud functions deploy ${{inputs.env_var}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --trigger-http

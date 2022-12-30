@@ -26,7 +26,7 @@ inputs:
   entry_point:
     description: "Entrypoint main function"
     required: true
-  env_var:
+  envars:
     description: "Env Variables of main function"
     required: true
     
@@ -47,7 +47,7 @@ runs:
       - name: login to artifact registry
         shell: bash
         run: |
-          printf "CARIQ_ENV: dev" > env.yaml
+          echo CARIQ_ENV: ${{inputs.envars}} > env.yaml
           cat env.yaml
           echo "invoke gcloud cli"
           gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --trigger-http

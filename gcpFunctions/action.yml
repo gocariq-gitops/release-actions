@@ -26,6 +26,10 @@ inputs:
   entry_point:
     description: "Entrypoint main function"
     required: true
+  env_var:
+    description: "Env Variables of main function"
+    required: true
+    
 
 
 
@@ -46,6 +50,6 @@ runs:
           set -x
           #if [[ ${{inputs.http_trigger}} eq "true" ]]
           #then
-          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --trigger-http
+          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --trigger-http --set-env-vars [CARIQ_ENV=${{inputs.env_var}}]
           #else
           #gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}}

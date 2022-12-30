@@ -50,7 +50,7 @@ runs:
           set -x
           #if [[ ${{inputs.http_trigger}} eq "true" ]]
           #then
-          echo CARIQ_ENV=${{inputs.env_var}} >> env.yaml
+          printf "CARIQ_ENV=${{inputs.env_var}}" > env.yaml
           cat env.yaml
           cat env.yaml | wc -l
           echo "invoke gcloug cli"

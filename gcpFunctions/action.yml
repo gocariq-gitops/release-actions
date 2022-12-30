@@ -47,13 +47,8 @@ runs:
       - name: login to artifact registry
         shell: bash
         run: |
-          set -x
-          #if [[ ${{inputs.http_trigger}} eq "true" ]]
-          #then
           printf "CARIQ_ENV=${{inputs.env_var}}" > env.yaml
           cat env.yaml
           cat env.yaml | wc -l
           echo "invoke gcloug cli"
-          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --trigger-http --env-vars-file env.yaml 
-          #else
-          #gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}}
+          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --trigger-http

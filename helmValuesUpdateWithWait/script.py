@@ -15,14 +15,14 @@ wait_max_attempt = 120
 
 if token is None:
     sys.exit("Token is not set")
-else:
-    logging.info("this is token: {0}".format(token))
 
-url_trigger = "https://api.github.com/repos/gocariq/environments/actions/workflows/update-tag.yaml/dispatches"
+base_url = "https://api.github.com/repos/gocariq/environments/actions"
+url_check = base_url + "/runs"
+url_trigger = base_url + "/workflows/update-tag.yaml/dispatches"
 payload = json.dumps({
     "ref": "main",
     "inputs": {
-        "appName": "{0}".format(appName ),
+        "appName": "{0}".format(appName),
         "deployEnv": "{0}".format(branch),
         "tag": "{0}".format(gitSha),
     }
@@ -32,11 +32,29 @@ headers = {
     'Content-Type': 'application/json',
     'Authorization': 'Bearer {0}'.format(token)
 }
-url_dispatch = "https://api.github.com/repos/gocariq/environments/actions/runs"
 headersGet = {
     'Accept': 'application/vnd.github.everest-preview+json',
     'Authorization': 'Bearer {0}'.format(token)
 }
+
+validateStatusCounter = 0
+while validateStatusCounter <= 100:
+    response = requests.request("GET", url_check, headers=headersGet)
+    if response.reason == 'OK':
+        jsonResponse = response.json()
+        currentStatus = jsonResponse['workflow_runs'][0]['status']
+        logging.info("Current job status: {0}".format(currentStatus))
+        if currentStatus != "queued" and currentStatus != "in_progress":
+            logging.info("Current job status: {0}".format(currentStatus))
+            break
+    else:
+        max_retry = 3
+        logging.warning("Failed to get run I will try {0} times".format(max_retry - validateStatusCounter))
+        if validateStatusCounter >= max_retry:
+            sys.exit('Failed to get workflow runs: {0}'.format(response.text))
+    validateStatusCounter += 1
+    time.sleep(10)
+
 
 logging.info('Dispatch helm update action action')
 logging.info(payload)
@@ -46,7 +64,7 @@ if response.status_code != 204:
 time.sleep(3)
 
 workflowId = ''
-response = requests.request("GET", url_dispatch, headers=headersGet)
+response = requests.request("GET", url_check, headers=headersGet)
 if response.reason == 'OK':
     json = json.loads(response.text)
     for node in json['workflow_runs']:

@@ -1,0 +1,27 @@
+name: "Configure Python build setup"
+description: "Configure .pypirc and pip.conf"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  google_project_id:
+    description: "Google Project Id"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+      - name: gcp auth
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{inputs.google_project_id}}
+          service_account_key: ${{inputs.google_credentials}}
+      - name: Create files of .pypirc and pip.conf
+        shell: bash
+        run: |
+          pwd
+          cp .pypirc $HOME
+          mkdir -p $HOME/.pip/
+          cp pip.conf $HOME/.pip/
+          pwd

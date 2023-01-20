@@ -23,6 +23,9 @@ inputs:
   runtime:
     description: "Function runtime"
     required: true
+  memory:
+    description: "Function memory"
+    required: true
   entry_point:
     description: "Entrypoint main function"
     required: true
@@ -50,4 +53,4 @@ runs:
           echo CARIQ_ENV: ${{inputs.envars}} > env.yaml
           cat env.yaml
           echo "invoke gcloud cli"
-          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --trigger-http
+          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --trigger-http

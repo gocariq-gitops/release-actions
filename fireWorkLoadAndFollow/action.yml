@@ -5,7 +5,7 @@ description: This action trigger deployment
 inputs:
   authToken:
     required: true
-    description: Token of the user who has permision to trigger action
+    description: Token of the user who has permission to trigger action
   targetEnv:
     required: false
     description: Target Deployed Env
@@ -15,6 +15,9 @@ inputs:
   workFlowFileName:
     required: true
     description: Name of the yaml file workflow
+  targetRepo:
+    required: false
+    description: name of the github repository
 
 
 runs:

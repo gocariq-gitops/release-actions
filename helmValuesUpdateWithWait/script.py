@@ -45,7 +45,7 @@ while validateStatusCounter <= 100:
         currentStatus = jsonResponse['workflow_runs'][0]['status']
         logging.info("Latest job status: {0}".format(currentStatus))
         if currentStatus != "queued" and currentStatus != "in_progress":
-            logging.info("I do not need to wait, no active actions {0}".format(currentStatus))
+            logging.info("I do not need to wait, no active actions with status 'in_progress' or 'queued'")
             break
     else:
         max_retry = 3

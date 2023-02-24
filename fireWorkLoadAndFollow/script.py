@@ -11,7 +11,7 @@ token = os.environ['INPUT_AUTHTOKEN']
 gitSha = os.environ['INPUT_TAG']
 targetEnv = os.environ['INPUT_TARGETENV']
 workflowName = os.environ['INPUT_WORKFLOWFILENAME']
-target_repository = os.environ['TARGET_TARGETREPO']
+target_repository = os.environ['INPUT_TARGETREPO']
 wait_max_attempt = 120
 
 if target_repository is None or target_repository is '':

@@ -14,10 +14,10 @@ workflowName = os.environ['INPUT_WORKFLOWFILENAME']
 target_repository = os.environ['INPUT_TARGETREPO']
 wait_max_attempt = 120
 
-if target_repository is None or target_repository is '':
+if target_repository is None or target_repository == '':
     target_repository = 'payment-automation'
 
-if token is None or token is '':
+if token is None or token == '':
     sys.exit("Token is not set")
 
 base_url = "https://api.github.com/repos/gocariq/{0}".format(target_repository)

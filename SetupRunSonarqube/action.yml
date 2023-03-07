@@ -1,0 +1,34 @@
+name: "Setup and Run Sonarqube"
+description: "Setup and Run Sonarqube"
+
+inputs:
+  project_key:
+    description: "project key"
+    required: true
+  sources:
+    description: "sources"
+    required: true
+  host_url:
+    description: "host url"
+    required: true
+  login:
+    description: "login"
+    required: true
+  exclusions:
+    description: exclusions"
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+      - name: Setup sonarqube
+        uses: warchant/setup-sonar-scanner@v3
+      - name: Run sonarqube
+        shell: bash
+        run: sonar-scanner
+            -Dsonar.projectKey=${{inputs.project_key}}
+            -Dsonar.sources=${{inputs.sources}}
+            -Dsonar.host.url=${{inputs.host_url}}
+            -Dsonar.login=${{inputs.login}}
+            -Dsonar.exclusions=${{inputs.exclusions}}

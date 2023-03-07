@@ -15,9 +15,8 @@ inputs:
     description: "login"
     required: true
   exclusions:
-    description: exclusions"
+    description: "exclusions"
     required: true
-
 
 runs:
   using: "composite"

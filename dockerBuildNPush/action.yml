@@ -19,6 +19,9 @@ inputs:
     required: true
   docker_params:
     description: "Docker build params"
+  docker_build_kit:
+    default: "1"
+    description: "Build kit some images are not building with 1"
 
 runs:
   using: "composite"
@@ -55,7 +58,7 @@ runs:
           docker images
           
           cd ${{inputs.docker_file_path}}
-          DOCKER_BUILDKIT=1 docker build ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
+          DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
           cd -
           docker images
 
@@ -71,5 +74,4 @@ runs:
           echo "Starting to push container"
           docker push $IMAGE_FULL_PATH1
           docker push $IMAGE_FULL_PATH2
-
           

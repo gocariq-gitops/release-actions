@@ -32,6 +32,9 @@ inputs:
   envars:
     description: "Env Variables of main function"
     required: true
+  service_account:
+    description: "Service Account of main function"
+    required: false
     
 
 
@@ -53,4 +56,4 @@ runs:
           echo CARIQ_ENV: ${{inputs.envars}} > env.yaml
           cat env.yaml
           echo "invoke gcloud cli"
-          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --trigger-http
+          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --trigger-http

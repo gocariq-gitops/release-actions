@@ -56,4 +56,9 @@ runs:
           echo CARIQ_ENV: ${{inputs.envars}} > env.yaml
           cat env.yaml
           echo "invoke gcloud cli"
-          gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --trigger-http
+          if test -z ${{inputs.secrets}}
+          then
+            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --trigger-http
+          else
+            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --set-secrets ${{inputs.service_account}} --trigger-http
+          fi

@@ -35,6 +35,9 @@ inputs:
   service_account:
     description: "Service Account of main function"
     required: false
+  secrets:
+    description: "Secrets of main function"
+    required: false
     
 
 

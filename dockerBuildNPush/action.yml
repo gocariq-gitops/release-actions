@@ -53,6 +53,17 @@ runs:
 
           export IMAGE1="$IMAGE_NAME:$IMAGE_TAG"
           export IMAGE2="$IMAGE_NAME:latest"
+          export IMAGE_FULL_PATH1="$REPO_URL/$PROJECT_ID/$REPO_NAME/${IMAGE1}"
+          export IMAGE_FULL_PATH2="$REPO_URL/$PROJECT_ID/$REPO_NAME/${IMAGE2}"
+
+          # Check image exist in the registry
+          docker manifest inspect ${IMAGE_FULL_PATH1} > /dev/null
+          IMAGE_EXISTS=$?
+          if [[ "${IMAGE_EXISTS}" == "0" ]]; then
+            echo "Image already exists."
+            echo "DOCKER PUSH IS SKIPPED"
+            exit 1
+          fi
 
           echo "Building docker image $IMAGE1 and $IMAGE2"
           docker images
@@ -62,19 +73,9 @@ runs:
           cd -
           docker images
 
-          export IMAGE_FULL_PATH1="$REPO_URL/$PROJECT_ID/$REPO_NAME/${IMAGE1}"
-          export IMAGE_FULL_PATH2="$REPO_URL/$PROJECT_ID/$REPO_NAME/${IMAGE2}"
-
           # Push image if it does not exist in the registry
-          docker manifest inspect ${IMAGE_FULL_PATH1} > /dev/null
-          IMAGE_EXISTS=$?
-          if [[ "${IMAGE_EXISTS}" == "1" ]]; then
-            echo "Push docker image"
-            docker tag $IMAGE1 $IMAGE_FULL_PATH1
-            docker tag $IMAGE2 $IMAGE_FULL_PATH2
-            docker push $IMAGE_FULL_PATH1
-            docker push $IMAGE_FULL_PATH2
-          else
-            echo "Image already exists."
-            echo "DOCKER PUSH IS SKIPPED"
-          fi
+          echo "Push docker image"
+          docker tag $IMAGE1 $IMAGE_FULL_PATH1
+          docker tag $IMAGE2 $IMAGE_FULL_PATH2
+          docker push $IMAGE_FULL_PATH1
+          docker push $IMAGE_FULL_PATH2

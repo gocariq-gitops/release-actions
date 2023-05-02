@@ -57,13 +57,13 @@ runs:
           export IMAGE_FULL_PATH2="$REPO_URL/$PROJECT_ID/$REPO_NAME/${IMAGE2}"
 
           # Check image exist in the registry
-          docker manifest inspect ${IMAGE_FULL_PATH1} > /dev/null
-          IMAGE_EXISTS=$?
-          if [[ "${IMAGE_EXISTS}" == "0" ]]; then
-            echo "Image already exists."
-            echo "DOCKER PUSH IS SKIPPED"
-            exit 1
-          fi
+          #docker manifest inspect ${IMAGE_FULL_PATH1} > /dev/null
+          #IMAGE_EXISTS=$?
+          #if [[ "${IMAGE_EXISTS}" == "0" ]]; then
+            #echo "Image already exists."
+            #echo "DOCKER PUSH IS SKIPPED"
+            #exit 1
+          #fi
 
           echo "Building docker image $IMAGE1 and $IMAGE2"
           docker images

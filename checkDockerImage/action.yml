@@ -1,0 +1,62 @@
+name: "Check Docker Image"
+description: "Check if docker image exists"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  google_project_id:
+    description: "Google Project Id"
+    required: true
+  docker_image_name:
+    description: "Docker Image Name"
+    required: true
+  docker_repo_name:
+    description: "Docker Repo Name"
+    required: true
+  docker_params:
+    description: "Docker build params"
+
+runs:
+  using: "composite"
+  steps:
+
+      - name: Print inputs
+        shell: bash
+        run: |
+          echo "docker_repo_name - ${{inputs.docker_repo_name}}"
+          echo "docker_image_name - ${{inputs.docker_image_name}}"
+          echo "google_project_id - ${{inputs.google_project_id}}"
+      - name: gcp auth
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{inputs.google_project_id}}
+          service_account_key: ${{inputs.google_credentials}}
+      - name: Docker Auth with gCloud CLI
+        shell: bash
+        run: |
+          gcloud auth configure-docker us-docker.pkg.dev
+      - name: check docker image
+        shell: bash
+        run: |
+          export REPO_URL="us-docker.pkg.dev"
+          export PROJECT_ID=${{inputs.google_project_id}}
+          export REPO_NAME=${{inputs.docker_repo_name}}
+          export IMAGE_NAME=${{inputs.docker_image_name}}
+          export IMAGE_TAG=$(git rev-parse --short HEAD)
+          echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          export IMAGE_FULL_PATH="$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG"
+          echo "Checking docker image $IMAGE_FULL_PATH"
+          if gcloud container images describe $IMAGE_FULL_PATH >/dev/null 2>&1; then
+            echo "IMAGE_EXIST=true"
+            echo "IMAGE_PATH=$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME" >> $GITHUB_ENV
+            echo "CURRENT_IMAGE=$IMAGE_FULL_PATH" >> $GITHUB_ENV
+            echo "IMAGE_EXIST=true" >> $GITHUB_ENV
+          else
+            echo "IMAGE_EXIST=false"
+            echo "IMAGE_EXIST=false" >> $GITHUB_ENV
+            #remove
+            echo "IMAGE_PATH=$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME" >> $GITHUB_ENV
+            echo "CURRENT_IMAGE=$IMAGE_FULL_PATH" >> $GITHUB_ENV
+          fi
+

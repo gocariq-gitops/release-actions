@@ -20,12 +20,16 @@ inputs:
   gke_google_credentials:
     description: "Docker Repo Name"
     required: true
-  location:
-    description: "Google Credentials"
-    required: true
   chart_name:
     description: "Google Credentials"
     required: true
+  location:
+    description: "Google Credentials"
+    required: false
+    default: ''
+#  location:
+#    description: "Google Credentials"
+#    required: true
 
 
 

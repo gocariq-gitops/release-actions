@@ -1,0 +1,109 @@
+name: Create Prod Image
+permissions: write-all
+
+on:
+  workflow_call:
+    inputs:
+      project-id:
+        default: 'gocariq-platform'
+        type: string
+      app-name:
+        required: true
+        type: string
+      registry-name:
+        default: 'cariq'
+        type: string
+
+    secrets:
+      GOOGLE_CRED:
+        required: true
+      K8S_POD_DEPLOY_VALIDATION:
+        required: true
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+
+      - name: Print input variables
+        run: |
+          echo "Project ID: ${{ inputs.project-id }}"
+          echo "App name: ${{ inputs.app-name }}"
+          echo "Registry name: ${{ inputs.registry-name }}"
+
+      - name: Check out repository
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+
+      - name: Image existence check
+        id: check-image
+        uses: gocariq-gitops/release-actions/checkDockerImage@reusable_workflows
+        with:
+          google_credentials: ${{secrets.GOOGLE_CRED}}
+          google_project_id: ${{ inputs.project-id }}
+          docker_repo_name:  ${{ inputs.registry-name }}
+          docker_image_name: ${{ inputs.app-name }}
+
+      - name: test echo
+        run: |
+          echo "IMAGE_EXIST - ${{ env.IMAGE_EXIST }}"
+          echo "SHORT_SHA   -${{ env.SHORT_SHA }}"
+
+      - name: STOP if Image isn't exist
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        run: |
+            echo "Image is not exist in Dev Repo. Stopping Pipeline.."
+            exit 1
+
+      # - name: Validate INT environment
+      #   uses: gocariq-gitops/release-actions/bashValidateDeployment@main
+      #   with:
+      #     google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+      #     app_name: ${{ inputs.app-name }}
+      #     google_project_id: ${{ inputs.project-id }}
+      #     expected_git_tag: ${{ env.SHORT_SHA }}
+      #     env_name: int
+      #     max_attempt: 2
+      #     sleep_time: 10
+
+      # - name: Validate STAGE environment
+      #   uses: gocariq-gitops/release-actions/bashValidateDeployment@main
+      #   with:
+      #     google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+      #     app_name: ${{ inputs.app-name }}
+      #     google_project_id: ${{ inputs.project-id }}
+      #     expected_git_tag: ${{ env.SHORT_SHA }}
+      #     env_name: stage
+      #     max_attempt: 2
+      #     sleep_time: 10
+
+
+      - name: GCP Auth
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ inputs.project-id }}
+          service_account_key: ${{secrets.GOOGLE_CRED}}
+
+      - name: Docker Auth
+        shell: bash
+        run: |
+          gcloud auth configure-docker us-docker.pkg.dev
+
+      - name: Get Next Version
+        shell: bash
+        run: |
+          # docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
+          # sh -c "git config --global --add safe.directory /app && semver-helper --next-ver"
+          echo "NEW_VERSION=$(docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
+          sh -c "git config --global --add safe.directory /app && semver-helper --next-ver")" >> $GITHUB_ENV
+
+      - name: Create PROD version of Image
+        run: |
+          echo "New PROD version of image - ${{ env.NEW_VERSION }}"
+          echo ${{ env.CURRENT_IMAGE }}
+          NEW_IMAGE_PATH="${{ env.IMAGE_PATH }}:${{ env.NEW_VERSION }}"
+          echo "new image - $NEW_IMAGE_PATH"
+          docker pull ${{ env.CURRENT_IMAGE }}
+          docker tag ${{ env.CURRENT_IMAGE }} $NEW_IMAGE_PATH
+          docker push $NEW_IMAGE_PATH
+

@@ -68,12 +68,10 @@ runs:
           fi
 
           echo "Building docker image $IMAGE1 and $IMAGE2"
-          docker images
           
           cd ${{inputs.docker_file_path}}
           DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
           cd -
-          docker images
 
           # Push image if it does not exist in the registry
           echo "Push docker image"

@@ -31,7 +31,7 @@ jobs:
         run: |
           echo "This branch is not main."
           echo "Current branch is ${{ github.ref_name }}"
-          exit1
+          exit 1
 
       - name: Check out repository
         id: CheckOut
@@ -100,6 +100,8 @@ jobs:
         run: |
           echo "NEW_VERSION=$(docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
           sh -c "git config --global --add safe.directory /app && semver-helper --next-ver")" >> $GITHUB_ENV
+          git tag ${NEW_VERSION}
+          git push --tags
 
       - name: Create PROD version of Image
         id: Create_PROD_version

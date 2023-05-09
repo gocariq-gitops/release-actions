@@ -80,30 +80,28 @@ jobs:
           helm lint ./charts/${{ inputs.app-name }}/
 
       - name: Check if it is Java
+        if: ${{ env.IMAGE_EXIST == 'false' }}
         shell: bash
         run: |
           set -x
-          [[ -z "$(find ./ -name *.java)" ]] && IS_JAVA_CODE_REPO="false" || IS_JAVA_CODE_REPO="true"
+          [[ -z "$(find ./ -name *.java |head -n 1)" ]] && IS_JAVA_CODE_REPO="false" || IS_JAVA_CODE_REPO="true"
           echo "IS_JAVA_CODE_REPO=$IS_JAVA_CODE_REPO" >> $GITHUB_ENV
 
       - name: Set up JDK 11 if required (for the Java code only)
-        if: ${{ env.IMAGE_EXIST == 'false' }}  && ${{ env.IS_JAVA_CODE_REPO == 'true' }}
+        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}
         id: setting-env
         uses: actions/setup-java@v2
         with:
           java-version: 11
           distribution: 'adopt'
 
-      - uses: gocariq-gitops/release-actions/ciBuildMetadataFetcher@v2
-        if: ${{ env.IMAGE_EXIST == 'false' }}
-
       - name: Code Build ${{ inputs.app-name }} if required (for the Java code only)
-        if: ${{ env.IMAGE_EXIST == 'false' }}  && ${{ env.IS_JAVA_CODE_REPO == 'true' }}
+        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}
         id: build-code
         shell: bash
         run: |
           set -x
-          ./${{ env.BUILD_SCRIPT_PATH }}
+          [[ -x ./build.sh ]] && ./build.sh
 
       - name: SonarQube Scan
         id: sonar-scan

@@ -10,7 +10,8 @@ inputs:
     required: true
   docker_file_path:
     description: "Docker File Path"
-    required: true
+    required: false
+    default: .
   docker_image_name:
     description: "Docker Image Name"
     required: true

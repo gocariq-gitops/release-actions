@@ -1,4 +1,4 @@
-name: Create Prod Image
+name: Prepare Release Image
 permissions: write-all
 
 on:
@@ -31,7 +31,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Image existence check
+      - name: Checking the availability of the image
         id: ImageCheck
         uses: gocariq-gitops/release-actions/checkDockerImage@v2
         with:
@@ -72,7 +72,6 @@ jobs:
           max_attempt: 5
           sleep_time: 10
 
-
       - name: GCP Auth
         id: GCP_Auth
         uses: google-github-actions/setup-gcloud@v0.2.0
@@ -105,4 +104,3 @@ jobs:
           docker pull ${{ env.CURRENT_IMAGE }}
           docker tag ${{ env.CURRENT_IMAGE }} $NEW_IMAGE_PATH
           docker push $NEW_IMAGE_PATH
-

@@ -1,4 +1,4 @@
-name: Code Build & Image Push (CICDv2)
+name: Build & Deploy To Testing Env (CICDv2)
 permissions: write-all
 
 on:
@@ -14,8 +14,9 @@ on:
         default: '#release'
         type: string
       deploy-env:
-        required: true
+        default: 'dev'
         type: string
+        required: false
       registry-name:
         default: 'cariq'
         type: string

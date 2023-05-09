@@ -86,24 +86,24 @@ jobs:
         run: |
           helm lint ./charts/${{ inputs.app-name }}/
 
-      - name: Set up JDK 11
-        if: ${{ env.IMAGE_EXIST == 'false' }}
-        id: setting-env
-        uses: actions/setup-java@v2
-        with:
-          java-version: 11
-          distribution: 'adopt'
+      # - name: Set up JDK 11
+      #   if: ${{ env.IMAGE_EXIST == 'false' }}
+      #   id: setting-env
+      #   uses: actions/setup-java@v2
+      #   with:
+      #     java-version: 11
+      #     distribution: 'adopt'
 
       - uses: gocariq-gitops/release-actions/ciBuildMetadataFetcher@main
         if: ${{ env.IMAGE_EXIST == 'false' }}
 
-      - name: Code Build ${{ inputs.app-name }}
-        if: ${{ env.IMAGE_EXIST == 'false' }}
-        id: build-code
-        shell: bash
-        run: |
-          set -x
-          ./${{ env.BUILD_SCRIPT_PATH }}
+      # - name: Code Build ${{ inputs.app-name }}
+      #   if: ${{ env.IMAGE_EXIST == 'false' }}
+      #   id: build-code
+      #   shell: bash
+      #   run: |
+      #     set -x
+      #     ./${{ env.BUILD_SCRIPT_PATH }}
 
       - name: SonarQube Scan
         id: sonar-scan

@@ -25,15 +25,6 @@ jobs:
     if: ${{ github.ref == 'refs/heads/main' }}
     steps:
 
-      - name: Check if branch is not main
-        id: CheckBranch
-        if: ${{ github.ref != 'refs/heads/main' }}
-        shell: bash
-        run: |
-          echo "This branch is not main."
-          echo "Current branch is ${{ github.ref_name }}"
-          exit 1
-
       - name: Check out repository
         id: CheckOut
         uses: actions/checkout@master

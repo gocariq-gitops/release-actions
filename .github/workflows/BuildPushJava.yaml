@@ -47,10 +47,19 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
+      - name: Check if branch is main
+        id: CheckBranch
+        if: ${{ github.ref == 'refs/heads/main' }}
+        shell: bash
+        run: |
+          echo "This branch is main. Action forbidden!"
+          exit1
+
       - uses: act10ns/slack@v2.0.0
         with:
           status: starting
           channel: ${{ inputs.slack-channel }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - uses: actions/checkout@v3
 
@@ -164,4 +173,5 @@ jobs:
           status: ${{ job.status }}
           steps: ${{ toJson(steps) }}
           channel: ${{ inputs.slack-channel }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: always()

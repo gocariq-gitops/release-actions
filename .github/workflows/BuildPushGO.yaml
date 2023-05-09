@@ -51,7 +51,7 @@ jobs:
         with:
           status: starting
           channel: ${{ inputs.slack-channel }}
-        if: always()
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - uses: actions/checkout@v3
 
@@ -160,4 +160,5 @@ jobs:
           status: ${{ job.status }}
           steps: ${{ toJson(steps) }}
           channel: ${{ inputs.slack-channel }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: always()

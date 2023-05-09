@@ -30,6 +30,13 @@ jobs:
           echo "App name: ${{ inputs.app-name }}"
           echo "Registry name: ${{ inputs.registry-name }}"
 
+      - name: Check if branch is not main
+        if: ${{ github.ref != 'refs/heads/main' }}
+        run: |
+          echo "This branch is not main."
+          echo "Current branch is ${{ github.ref_name }}""
+          exit1
+
       - name: Check out repository
         uses: actions/checkout@master
         with:

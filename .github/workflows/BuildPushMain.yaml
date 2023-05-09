@@ -33,7 +33,7 @@ jobs:
 
       - name: Image existence check
         id: ImageCheck
-        uses: gocariq-gitops/release-actions/checkDockerImage@reusable_workflows
+        uses: gocariq-gitops/release-actions/checkDockerImage@v2
         with:
           google_credentials: ${{secrets.GOOGLE_CRED}}
           google_project_id: ${{ inputs.project-id }}
@@ -50,7 +50,7 @@ jobs:
 
       - name: Validate INT environment
         id: Validate_INT_Environment
-        uses: gocariq-gitops/release-actions/bashValidateDeployment@main
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
         with:
           google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
           app_name: ${{ inputs.app-name }}
@@ -62,7 +62,7 @@ jobs:
 
       - name: Validate STAGE environment
         id: Validate_STAGE_Environment
-        uses: gocariq-gitops/release-actions/bashValidateDeployment@main
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
         with:
           google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
           app_name: ${{ inputs.app-name }}

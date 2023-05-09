@@ -95,8 +95,9 @@ jobs:
           java-version: 11
           distribution: 'adopt'
 
-      #- uses: gocariq-gitops/release-actions/ciBuildMetadataFetcher@v2
-      #  if: ${{ env.IMAGE_EXIST == 'false' }}
+      # TODO - get rid of it and applications.yaml file
+      - uses: gocariq-gitops/release-actions/ciBuildMetadataFetcher@v2
+        if: ${{ env.IMAGE_EXIST == 'false' }}
 
       - name: Code Build ${{ inputs.app-name }} if required (for the Java code only)
         if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}

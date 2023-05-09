@@ -127,7 +127,7 @@ jobs:
           docker_image_name: ${{ inputs.app-name }}
           docker_build_kit: '0'
 
-      - name: helm package and push
+      - name: Helm package and push
         id: helm-package-push
         uses: gocariq-gitops/release-actions/k8sHelm@v2
         with:
@@ -139,7 +139,7 @@ jobs:
           gke_google_credentials: ${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}
           chart_name: ${{ inputs.app-name }}
 
-      - name: gitOps update helm tag in environment repo
+      - name: GitOps update helm tag in environment repo (deploy to ${{ inputs.deploy-env }})
         id: update-tag-version
         uses: gocariq-gitops/release-actions/helmValuesUpdateWithWait@v2
         with:
@@ -148,7 +148,7 @@ jobs:
           appName: ${{ inputs.app-name }}
           deployEnv: ${{ inputs.deploy-env }}
 
-      - name: Validate deployment
+      - name: Validate deployment on ${{ inputs.deploy-env }}
         id: validate-git-tag-deployment
         uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
         with:

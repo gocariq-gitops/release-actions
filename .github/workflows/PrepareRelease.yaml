@@ -22,9 +22,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.base_ref == 'main' }}
     steps:
-
       - name: Check out repository
         id: CheckOut
         uses: actions/checkout@master

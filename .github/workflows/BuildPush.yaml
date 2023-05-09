@@ -79,8 +79,15 @@ jobs:
         run: |
           helm lint ./charts/${{ inputs.app-name }}/
 
-      - name: Set up JDK 11
-        if: ${{ env.IMAGE_EXIST == 'false' }}
+      - name: Check if it is Java
+        shell: bash
+        run: |
+          set -x
+          [[ -z "$(find ./ -name *.java)" ]] && IS_JAVA_CODE_REPO="false" || IS_JAVA_CODE_REPO="true"
+          echo "IS_JAVA_CODE_REPO=$IS_JAVA_CODE_REPO" >> $GITHUB_ENV
+
+      - name: Set up JDK 11 if required (for the Java code only)
+        if: ${{ env.IMAGE_EXIST == 'false' }}  && ${{ env.IS_JAVA_CODE_REPO == 'true' }}
         id: setting-env
         uses: actions/setup-java@v2
         with:
@@ -90,8 +97,8 @@ jobs:
       - uses: gocariq-gitops/release-actions/ciBuildMetadataFetcher@v2
         if: ${{ env.IMAGE_EXIST == 'false' }}
 
-      - name: Code Build ${{ inputs.app-name }}
-        if: ${{ env.IMAGE_EXIST == 'false' }}
+      - name: Code Build ${{ inputs.app-name }} if required (for the Java code only)
+        if: ${{ env.IMAGE_EXIST == 'false' }}  && ${{ env.IS_JAVA_CODE_REPO == 'true' }}
         id: build-code
         shell: bash
         run: |

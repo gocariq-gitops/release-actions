@@ -47,15 +47,6 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
-      - name: Print input variables
-        run: |
-          echo "Project ID: ${{ inputs.project-id }}"
-          echo "App name: ${{ inputs.app-name }}"
-          echo "Slack channel: ${{ inputs.slack-channel }}"
-          echo "Deploy environment: ${{ inputs.deploy-env }}"
-          echo "Registry name: ${{ inputs.registry-name }}"
-          echo "Image tag: ${{ inputs.image-tag }}"
-
       - uses: act10ns/slack@v2.0.0
         with:
           status: starting
@@ -73,11 +64,6 @@ jobs:
           docker_repo_name:  ${{ inputs.registry-name }}
           docker_image_name: ${{ inputs.app-name }}
 
-      - name: Print test echo
-        run: |
-          echo "Image exist - ${{ env.IMAGE_EXIST }}"
-          echo "SHORT_SHA - ${{ env.SHORT_SHA }}"
-
       - name: Dockerfile lint
         if: ${{ env.IMAGE_EXIST == 'false' }}
         id: validate-dockerfile
@@ -88,9 +74,8 @@ jobs:
       - name: helm lint
         if: ${{ env.IMAGE_EXIST == 'false' }}
         id: validate-chart
+        shell: bash
         run: |
-          pwd
-          ls
           helm lint ./charts/${{ inputs.app-name }}/
 
       - uses: gocariq-gitops/release-actions/ciBuildMetadataFetcher@main

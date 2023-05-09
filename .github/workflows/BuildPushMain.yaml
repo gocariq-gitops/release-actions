@@ -24,26 +24,23 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
 
-      - name: Print input variables
-        run: |
-          echo "Project ID: ${{ inputs.project-id }}"
-          echo "App name: ${{ inputs.app-name }}"
-          echo "Registry name: ${{ inputs.registry-name }}"
-
       - name: Check if branch is not main
+        id: CheckBranch
         if: ${{ github.ref != 'refs/heads/main' }}
+        shell: bash
         run: |
           echo "This branch is not main."
-          echo "Current branch is ${{ github.ref_name }}""
+          echo "Current branch is ${{ github.ref_name }}"
           exit1
 
       - name: Check out repository
+        id: CheckOut
         uses: actions/checkout@master
         with:
           fetch-depth: 0
 
       - name: Image existence check
-        id: check-image
+        id: ImageCheck
         uses: gocariq-gitops/release-actions/checkDockerImage@reusable_workflows
         with:
           google_credentials: ${{secrets.GOOGLE_CRED}}
@@ -51,60 +48,62 @@ jobs:
           docker_repo_name:  ${{ inputs.registry-name }}
           docker_image_name: ${{ inputs.app-name }}
 
-      - name: test echo
-        run: |
-          echo "IMAGE_EXIST - ${{ env.IMAGE_EXIST }}"
-          echo "SHORT_SHA   -${{ env.SHORT_SHA }}"
-
-      - name: STOP if Image isn't exist
+      - name: Stop if the image doesn't exist
+        id: CheckImage
         if: ${{ env.IMAGE_EXIST == 'false' }}
+        shell: bash
         run: |
-            echo "Image is not exist in Dev Repo. Stopping Pipeline.."
+            echo "The image does not exist in Dev Repo. Stopping Pipeline."
             exit 1
 
-      # - name: Validate INT environment
-      #   uses: gocariq-gitops/release-actions/bashValidateDeployment@main
-      #   with:
-      #     google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
-      #     app_name: ${{ inputs.app-name }}
-      #     google_project_id: ${{ inputs.project-id }}
-      #     expected_git_tag: ${{ env.SHORT_SHA }}
-      #     env_name: int
-      #     max_attempt: 2
-      #     sleep_time: 10
+      - name: Validate INT environment
+        id: Validate_INT_Environment
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@main
+        with:
+          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+          app_name: ${{ inputs.app-name }}
+          google_project_id: ${{ inputs.project-id }}
+          expected_git_tag: ${{ env.SHORT_SHA }}
+          env_name: int
+          max_attempt: 5
+          sleep_time: 10
 
-      # - name: Validate STAGE environment
-      #   uses: gocariq-gitops/release-actions/bashValidateDeployment@main
-      #   with:
-      #     google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
-      #     app_name: ${{ inputs.app-name }}
-      #     google_project_id: ${{ inputs.project-id }}
-      #     expected_git_tag: ${{ env.SHORT_SHA }}
-      #     env_name: stage
-      #     max_attempt: 2
-      #     sleep_time: 10
+      - name: Validate STAGE environment
+        id: Validate_STAGE_Environment
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@main
+        with:
+          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+          app_name: ${{ inputs.app-name }}
+          google_project_id: ${{ inputs.project-id }}
+          expected_git_tag: ${{ env.SHORT_SHA }}
+          env_name: stage
+          max_attempt: 5
+          sleep_time: 10
 
 
       - name: GCP Auth
+        id: GCP_Auth
         uses: google-github-actions/setup-gcloud@v0.2.0
         with:
           project_id: ${{ inputs.project-id }}
           service_account_key: ${{secrets.GOOGLE_CRED}}
 
       - name: Docker Auth
+        id: Docker_Auth
         shell: bash
         run: |
           gcloud auth configure-docker us-docker.pkg.dev
 
       - name: Get Next Version
+        id: Get_PROD_version
         shell: bash
         run: |
-          # docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
-          # sh -c "git config --global --add safe.directory /app && semver-helper --next-ver"
           echo "NEW_VERSION=$(docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
           sh -c "git config --global --add safe.directory /app && semver-helper --next-ver")" >> $GITHUB_ENV
 
       - name: Create PROD version of Image
+        id: Create_PROD_version
+        shell: bash
         run: |
           echo "New PROD version of image - ${{ env.NEW_VERSION }}"
           echo ${{ env.CURRENT_IMAGE }}

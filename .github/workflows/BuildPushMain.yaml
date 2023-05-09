@@ -105,8 +105,7 @@ jobs:
         id: Create_PROD_version
         shell: bash
         run: |
-          echo "New PROD version of image - ${{ env.NEW_VERSION }}"
-          echo ${{ env.CURRENT_IMAGE }}
+          echo "Update microservice version '${{ env.CURRENT_IMAGE }}' -> '${{ env.NEW_VERSION }}'"
           NEW_IMAGE_PATH="${{ env.IMAGE_PATH }}:${{ env.NEW_VERSION }}"
           echo "new image - $NEW_IMAGE_PATH"
           docker pull ${{ env.CURRENT_IMAGE }}

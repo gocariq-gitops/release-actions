@@ -31,7 +31,7 @@ on:
         required: true
       SONAR_TOKEN:
         required: true
-      GOOGLE_CRED:
+      GCP_SA_GHA_IMAGEPUSH:
         required: true
       REGISTRY_HOST_NAME:
         required: true
@@ -72,7 +72,7 @@ jobs:
         id: check-image
         uses: gocariq-gitops/release-actions/checkDockerImage@v2
         with:
-          google_credentials: ${{secrets.GOOGLE_CRED}}
+          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
           google_project_id: ${{ inputs.project-id }}
           docker_repo_name:  ${{ inputs.registry-name }}
           docker_image_name: ${{ inputs.app-name }}
@@ -132,7 +132,7 @@ jobs:
         if: ${{ env.IMAGE_EXIST == 'false' }}
         uses: gocariq-gitops/release-actions/dockerBuildNPush@v2
         with:
-          google_credentials: ${{secrets.GOOGLE_CRED}}
+          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
           google_project_id: ${{ inputs.project-id }}
           docker_repo_name: ${{ inputs.registry-name }}
           docker_file_path: ${{ env.DOCKER_FILE_PATH }}
@@ -143,7 +143,7 @@ jobs:
       #   id: helm-package-push
       #   uses: gocariq-gitops/release-actions/k8sHelm@v2
       #   with:
-      #     google_credentials: ${{secrets.GOOGLE_CRED}}
+      #     google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
       #     image_tag: ${{ inputs.image-tag }}
       #     registry_name: ${{ inputs.registry-name }}
       #     registry_host_name: ${{secrets.REGISTRY_HOST_NAME}}

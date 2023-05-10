@@ -15,7 +15,7 @@ on:
         type: string
 
     secrets:
-      GOOGLE_CRED:
+      GCP_SA_GHA_IMAGEPUSH:
         required: true
       K8S_POD_DEPLOY_VALIDATION:
         required: true
@@ -36,7 +36,7 @@ jobs:
         id: ImageCheck
         uses: gocariq-gitops/release-actions/checkDockerImage@v2
         with:
-          google_credentials: ${{secrets.GOOGLE_CRED}}
+          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
           google_project_id: ${{ inputs.project-id }}
           docker_repo_name:  ${{ inputs.registry-name }}
           docker_image_name: ${{ inputs.app-name }}
@@ -60,7 +60,7 @@ jobs:
 #        id: ImageCheck
 #        uses: gocariq-gitops/release-actions/checkDockerImage@v2
 #        with:
-#          google_credentials: ${{secrets.GOOGLE_CRED}}
+#          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
 #          google_project_id: ${{ inputs.project-id }}
 #          docker_repo_name:  ${{ inputs.registry-name }}
 #          docker_image_name: ${{ inputs.app-name }}
@@ -103,7 +103,7 @@ jobs:
         uses: google-github-actions/setup-gcloud@v0.2.0
         with:
           project_id: ${{ inputs.project-id }}
-          service_account_key: ${{secrets.GOOGLE_CRED}}
+          service_account_key: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
 
       - name: Docker Auth
         id: Docker_Auth

@@ -34,7 +34,6 @@ jobs:
         shell: bash
         run: |
           set -x
-          git log -n 10 --pretty=oneline
           GIT_SOURCE_BRANCH_SHA=$(git log -n 1 |grep "Merge:\s*\d*\s*\d*" | awk "{print \$3}")
           echo "GIT_SOURCE_BRANCH_SHA=${GIT_SOURCE_BRANCH_SHA}" >> $GITHUB_ENV
 
@@ -97,18 +96,18 @@ jobs:
         id: Get_PROD_version
         shell: bash
         run: |
-          git log -n 10 --pretty=oneline
-          echo "NEW_VERSION=$(docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
-          sh -c "git config --global --add safe.directory /app && semver-helper --next-ver")" >> $GITHUB_ENV
-          git tag ${NEW_VERSION}
+          NEXT_VERSION=$(docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
+              sh -c "git config --global --add safe.directory /app && semver-helper --next-ver")
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+          git tag ${NEXT_VERSION}
           git push --tags
 
       - name: Create PROD version of Image
         id: Create_PROD_version
         shell: bash
         run: |
-          echo "Update microservice version '${{ env.CURRENT_IMAGE }}' -> '${{ env.NEW_VERSION }}'"
-          NEW_IMAGE_PATH="${{ env.IMAGE_PATH }}:${{ env.NEW_VERSION }}"
+          echo "Update microservice version '${{ env.CURRENT_IMAGE }}' -> '${{ env.NEXT_VERSION }}'"
+          NEW_IMAGE_PATH="${{ env.IMAGE_PATH }}:${{ env.NEXT_VERSION }}"
           echo "new image - $NEW_IMAGE_PATH"
           docker pull ${{ env.CURRENT_IMAGE }}
           docker tag ${{ env.CURRENT_IMAGE }} $NEW_IMAGE_PATH

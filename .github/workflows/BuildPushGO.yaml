@@ -14,8 +14,9 @@ on:
         default: '#release'
         type: string
       deploy-env:
-        required: true
+        default: 'dev'
         type: string
+        required: false
       registry-name:
         default: 'cariq'
         type: string
@@ -44,6 +45,7 @@ on:
         required: true
 jobs:
   build:
+    if: ${{ github.ref != 'refs/heads/main' }}
     runs-on: ubuntu-22.04
     steps:
 
@@ -52,6 +54,17 @@ jobs:
           status: starting
           channel: ${{ inputs.slack-channel }}
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Detect environment
+        shell: bash
+        run: |
+          set -x
+          if [[ -z "${{ inputs.deploy-env }}" ]]; then
+            DEPLOY_ENV="dev"
+          else
+            DEPLOY_ENV="${{ inputs.deploy-env }}"
+          fi
+          echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_ENV
 
       - uses: actions/checkout@v3
 
@@ -78,8 +91,33 @@ jobs:
         run: |
           helm lint ./charts/${{ inputs.app-name }}/
 
+      - name: Check if it is Java
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        shell: bash
+        run: |
+          set -x
+          [[ -z "$(find ./ -name *.java |head -n 1)" ]] && IS_JAVA_CODE_REPO="false" || IS_JAVA_CODE_REPO="true"
+          echo "IS_JAVA_CODE_REPO=$IS_JAVA_CODE_REPO" >> $GITHUB_ENV
+
+      - name: Set up JDK 11 if required (for the Java code only)
+        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}
+        id: setting-env
+        uses: actions/setup-java@v2
+        with:
+          java-version: 11
+          distribution: 'adopt'
+
+      # TODO - get rid of it and applications.yaml file
       - uses: gocariq-gitops/release-actions/ciBuildMetadataFetcher@v2
         if: ${{ env.IMAGE_EXIST == 'false' }}
+
+      - name: Code Build ${{ inputs.app-name }} if required (for the Java code only)
+        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}
+        id: build-code
+        shell: bash
+        run: |
+          set -x
+          [[ -x ./build.sh ]] && ./build.sh
 
       - name: SonarQube Scan
         id: sonar-scan
@@ -101,7 +139,7 @@ jobs:
           docker_image_name: ${{ inputs.app-name }}
           docker_build_kit: '0'
 
-      # - name: helm package and push
+      # - name: Helm package and push
       #   id: helm-package-push
       #   uses: gocariq-gitops/release-actions/k8sHelm@v2
       #   with:
@@ -113,16 +151,16 @@ jobs:
       #     gke_google_credentials: ${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}
       #     chart_name: ${{ inputs.app-name }}
 
-      # - name: gitOps update helm tag in environment repo
+      # - name: GitOps update helm tag in environment repo (deploy to ${{ env.DEPLOY_ENV }})
       #   id: update-tag-version
       #   uses: gocariq-gitops/release-actions/helmValuesUpdateWithWait@v2
       #   with:
       #     tag: ${{ env.SHORT_SHA }}
       #     authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
       #     appName: ${{ inputs.app-name }}
-      #     deployEnv: ${{ inputs.deploy-env }}
+      #     deployEnv: ${{ env.DEPLOY_ENV }}
 
-      # - name: Validate deployment
+      # - name: Validate deployment on ${{ env.DEPLOY_ENV }}
       #   id: validate-git-tag-deployment
       #   uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
       #   with:
@@ -130,35 +168,24 @@ jobs:
       #     app_name: ${{ inputs.app-name }}
       #     google_project_id: ${{ inputs.project-id }}
       #     expected_git_tag: ${{ env.SHORT_SHA }}
-      #     env_name: ${{ inputs.deploy-env }}
+      #     env_name: ${{ env.DEPLOY_ENV }}
       #     max_attempt: 30
       #     sleep_time: 10
 
-      # - name: Trigger Test Suites
-      #   if: ${{ env.IMAGE_EXIST == 'false' }}
-      #   id: smoke-test
-      #   uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@v2
-      #   with:
-      #     authToken: ${{secrets.GHA_DISPATCH_TEST}}
-      #     targetEnv: ${{ inputs.deploy-env }}
-      #     tag: ${{ env.SHORT_SHA }}
-      #     workFlowFileName: core-service-test
+      # # - name: Trigger Test Suites
+      # #   if: ${{ env.IMAGE_EXIST == 'false' }}
+      # #   id: smoke-test
+      # #   uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@v2
+      # #   with:
+      # #     authToken: ${{secrets.GHA_DISPATCH_TEST}}
+      # #     targetEnv: ${{ env.DEPLOY_ENV }}
+      # #     tag: ${{ env.SHORT_SHA }}
+      # #     workFlowFileName: core-service-test
 
-      # #Step from service
-      # - name: Trigger Test Suites
-      #   if: contains(fromJson('["refs/heads/dev", "refs/heads/int"]'), github.ref)
-      #   id: all-suite-test
-      #   uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@v2
+      # - uses: act10ns/slack@v2.0.0
       #   with:
-      #     authToken: ${{secrets.GHA_DISPATCH_TEST}}
-      #     targetEnv: ${{ steps.branch-name.outputs.current_branch }}
-      #     tag: ${{ env.SHORT_SHA }}
-      #     workFlowFileName: payment-domain-test
-
-      - uses: act10ns/slack@v2.0.0
-        with:
-          status: ${{ job.status }}
-          steps: ${{ toJson(steps) }}
-          channel: ${{ inputs.slack-channel }}
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-        if: always()
+      #     status: ${{ job.status }}
+      #     steps: ${{ toJson(steps) }}
+      #     channel: ${{ inputs.slack-channel }}
+      #     webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #   if: always()

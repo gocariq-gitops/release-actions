@@ -52,10 +52,9 @@ runs:
           export IMAGE_TAG="${{ inputs.docker_image_tag }}"
         fi
 
-        echo "SHORT_SHA=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+        echo "CURRENT_IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
         export IMAGE_FULL_PATH="$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG"
         echo "Checking docker image $IMAGE_FULL_PATH"
-
         echo "IMAGE_FULL_PATH='${IMAGE_FULL_PATH}'"
 
         if gcloud container images describe $IMAGE_FULL_PATH >/dev/null 2>&1; then

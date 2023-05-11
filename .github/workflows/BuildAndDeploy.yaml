@@ -161,7 +161,7 @@ jobs:
         id: update-tag-version
         uses: gocariq-gitops/release-actions/helmValuesUpdateWithWait@v2
         with:
-          tag: ${{ env.CURRENT_IMAGE }}
+          tag: ${{ env.CURRENT_IMAGE_TAG }}
           authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
           appName: ${{ inputs.app-name }}
           deployEnv: ${{ env.DEPLOY_ENV }}
@@ -173,7 +173,7 @@ jobs:
           google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
           app_name: ${{ inputs.app-name }}
           google_project_id: ${{ inputs.project-id }}
-          expected_git_tag: ${{ env.CURRENT_IMAGE }}
+          expected_git_tag: ${{ env.CURRENT_IMAGE_TAG }}
           env_name: ${{ env.DEPLOY_ENV }}
           max_attempt: 30
           sleep_time: 10
@@ -185,7 +185,7 @@ jobs:
       #   with:
       #     authToken: ${{secrets.GHA_DISPATCH_TEST}}
       #     targetEnv: ${{ env.DEPLOY_ENV }}
-      #     tag: ${{ env.CURRENT_IMAGE }}
+      #     tag: ${{ env.CURRENT_IMAGE_TAG }}
       #     workFlowFileName: core-service-test
 
       - uses: act10ns/slack@v2.0.0

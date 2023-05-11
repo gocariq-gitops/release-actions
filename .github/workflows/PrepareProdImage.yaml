@@ -39,6 +39,11 @@ jobs:
 #          docker_repo_name:  ${{ inputs.registry-name }}
 #          docker_image_name: ${{ inputs.app-name }}
 
+      - name: Print Git source branch name
+        shell: bash
+        run: |
+          echo "soure branch - ${{ github.base_ref }}"
+
       - name: Check out repository
         id: CheckOut
         uses: actions/checkout@master

@@ -24,37 +24,11 @@ jobs:
     runs-on: ubuntu-22.04
     if: ${{ github.base_ref == 'main' }}
     steps:
-
-
-
-      - name: Check out repository
-        with:
-          ref: ${{ github.base_ref }}
-          fetch-depth: 0
-
-      - name: Checking the availability of the image
-        id: ImageCheck
-        uses: gocariq-gitops/release-actions/checkDockerImage@v2
-        with:
-          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
-          google_project_id: ${{ inputs.project-id }}
-          docker_repo_name:  ${{ inputs.registry-name }}
-          docker_image_name: ${{ inputs.app-name }}
-
-
-
 #      - name: Check out repository
-#        id: CheckOut
-#        uses: actions/checkout@master
+#        uses: actions/checkout@v3
 #        with:
+#          ref: ${{ github.base_ref }}
 #          fetch-depth: 0
-#
-#      - name: Get Git source branch sha
-#        shell: bash
-#        run: |
-#          set -x
-#          GIT_SOURCE_BRANCH_SHA=$(git log -n 1 |grep "Merge:\s*\d*\s*\d*" | awk "{print \$3}")
-#          echo "GIT_SOURCE_BRANCH_SHA=${GIT_SOURCE_BRANCH_SHA}" >> $GITHUB_ENV
 #
 #      - name: Checking the availability of the image
 #        id: ImageCheck
@@ -64,7 +38,29 @@ jobs:
 #          google_project_id: ${{ inputs.project-id }}
 #          docker_repo_name:  ${{ inputs.registry-name }}
 #          docker_image_name: ${{ inputs.app-name }}
-#          docker_image_tag: ${{ env.GIT_SOURCE_BRANCH_SHA }}
+
+      - name: Check out repository
+        id: CheckOut
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+
+      - name: Get Git source branch sha
+        shell: bash
+        run: |
+          set -x
+          GIT_SOURCE_BRANCH_SHA=$(git log -n 1 |grep "Merge:\s*\d*\s*\d*" | awk "{print \$3}")
+          echo "GIT_SOURCE_BRANCH_SHA=${GIT_SOURCE_BRANCH_SHA}" >> $GITHUB_ENV
+
+      - name: Checking the availability of the image
+        id: ImageCheck
+        uses: gocariq-gitops/release-actions/checkDockerImage@v2
+        with:
+          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+          google_project_id: ${{ inputs.project-id }}
+          docker_repo_name:  ${{ inputs.registry-name }}
+          docker_image_name: ${{ inputs.app-name }}
+          docker_image_tag: ${{ env.GIT_SOURCE_BRANCH_SHA }}
 
       - name: Stop if the image doesn't exist
         id: CheckImage

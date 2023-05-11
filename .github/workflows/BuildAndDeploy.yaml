@@ -26,6 +26,9 @@ on:
       sonar:
         default: 'https://sonar.gocariq.com'
         type: string
+      sonar_enabled:
+        default: 'true'
+        type: string
     secrets:
       SLACK_WEBHOOK_URL:
         required: true
@@ -121,7 +124,7 @@ jobs:
 
       - name: SonarQube Scan
         id: sonar-scan
-        if: ${{ env.IMAGE_EXIST == 'false' }}
+        if: ${{ env.IMAGE_EXIST == 'false' && inputs.sonar_enabled == 'true' }}
         uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

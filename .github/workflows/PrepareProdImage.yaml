@@ -119,8 +119,14 @@ jobs:
           NEXT_VERSION=$(docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
               sh -c "git config --global --add safe.directory /app && semver-helper --next-ver")
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
-          git tag ${NEXT_VERSION}
-          git push --tags
+          if [[ -z $(git tag -l |grep "${NEXT_VERSION}") ]]; then
+            git tag ${NEXT_VERSION}
+            git push --tags
+          else
+            echo ""
+            echo "It seems you have re-run this job, git tag '${NEXT_VERSION}' already exists."
+            echo "NOTE: This run doesn't bring any changes."
+          fi
 
       - name: Create PROD version of Image
         id: Create_PROD_version

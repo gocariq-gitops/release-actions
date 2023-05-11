@@ -43,8 +43,6 @@ on:
         required: true
       GCP_SA_GHA_IMAGEPUSH:
         required: true
-      REGISTRY_HOST_NAME:
-        required: true
       GKE_SA_GHA_PUSHER_CREDENTIALS:
         required: true
       GHA_DEVOPS_DISPATCH:
@@ -152,7 +150,6 @@ jobs:
           google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
           image_tag: ${{ inputs.image-tag }}
           registry_name: ${{ inputs.registry-name }}
-          registry_host_name: ${{secrets.REGISTRY_HOST_NAME}}
           project_id: ${{ inputs.project-id }}
           gke_google_credentials: ${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}
           chart_name: ${{ inputs.app-name }}

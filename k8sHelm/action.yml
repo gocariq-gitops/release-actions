@@ -12,8 +12,9 @@ inputs:
     description: "Docker File Path"
     required: true
   registry_host_name:
-    description: "Docker File Path"
-    required: true
+    description: "Registry host name"
+    required: false
+    default: 'us-docker.pkg.dev'
   project_id:
     description: "Docker Image Name"
     required: true
@@ -23,15 +24,6 @@ inputs:
   chart_name:
     description: "Google Credentials"
     required: true
-  location:
-    description: "Google Credentials"
-    required: false
-    default: ''
-#  location:
-#    description: "Google Credentials"
-#    required: true
-
-
 
 runs:
   using: "composite"
@@ -43,15 +35,13 @@ runs:
       - uses: google-github-actions/setup-gcloud@v0
         with:
           version: latest
-          
+
       - name: login to artifact registry
         shell: bash
         run: |
           set -x
-          # gcloud auth configure-docker ${{ inputs.registry_host_name }} --quiet
-          gcloud auth configure-docker us-docker.pkg.dev --quiet
-          echo "------"
-          cat /home/runner/.docker/config.json
+          gcloud auth configure-docker ${{ inputs.registry_host_name }} --quiet
+
       - name: helm package
         shell: bash
         run: |
@@ -60,7 +50,6 @@ runs:
           helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.image_tag}}
       
       - name: helm push
-        #         if: ${{ github.event_name == 'push' }}
         shell: bash
         run: |
           set -x

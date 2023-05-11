@@ -48,6 +48,7 @@ runs:
         shell: bash
         run: |
           set -x
+          echo "${{ inputs.registry_host_name }}"
           gcloud auth configure-docker ${{ inputs.registry_host_name }} --quiet
           
       - name: helm package

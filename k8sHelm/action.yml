@@ -48,10 +48,9 @@ runs:
         shell: bash
         run: |
           set -x
-          echo "${{ inputs.registry_host_name }}" > secret.txt
-          cat secret.txt
           gcloud auth configure-docker ${{ inputs.registry_host_name }} --quiet
-          
+          echo "------"
+          cat /home/runner/.docker/config.json
       - name: helm package
         shell: bash
         run: |

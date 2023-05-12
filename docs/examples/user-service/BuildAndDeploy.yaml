@@ -1,0 +1,34 @@
+name: Build And Deploy (to test Envs) - CICDv2
+permissions: write-all
+
+on:
+  push:
+    branches:
+      - feature/**
+      - release/**
+      - dev
+  workflow_dispatch:
+    inputs:
+      deploy_env:
+        type: choice
+        description: Select the environment
+        options:
+          - dev
+          - int
+          - stage
+
+jobs:
+  BuildAndDeploy:
+    uses: gocariq-gitops/release-actions/.github/workflows/BuildAndDeploy.yaml@v2
+    with:
+      app-name: "${{ github.event.repository.name }}"
+      deploy-env: "${{ github.event.inputs.deploy_env }}"
+      # deploy-env-on-push: "dev" - optional
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      GCP_SA_GHA_IMAGEPUSH: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+      GKE_SA_GHA_PUSHER_CREDENTIALS: ${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}
+      GHA_DEVOPS_DISPATCH: ${{secrets.GHA_DEVOPS_DISPATCH}}
+      K8S_POD_DEPLOY_VALIDATION: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+      GHA_DISPATCH_TEST: ${{secrets.GHA_DISPATCH_TEST}}

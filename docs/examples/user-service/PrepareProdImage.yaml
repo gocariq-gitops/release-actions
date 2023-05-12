@@ -1,0 +1,16 @@
+name: Prepare PROD Image - CICDv2
+permissions: write-all
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  PrepareProdImage:
+    uses: gocariq-gitops/release-actions/.github/workflows/PrepareProdImage.yaml@v2
+    with:
+      app-name: "${{ github.event.repository.name }}"
+    secrets:
+      GCP_SA_GHA_IMAGEPUSH: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+      K8S_POD_DEPLOY_VALIDATION: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}

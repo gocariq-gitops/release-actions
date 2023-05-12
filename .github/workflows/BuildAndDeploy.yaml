@@ -35,6 +35,9 @@ on:
       build_script_path:
         default: build.sh
         type: string
+      java-version:
+        default: 11
+        type: string
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -107,12 +110,12 @@ jobs:
           [[ -z "$(find ./ -name *.java |head -n 1)" ]] && IS_JAVA_CODE_REPO="false" || IS_JAVA_CODE_REPO="true"
           echo "IS_JAVA_CODE_REPO=$IS_JAVA_CODE_REPO" >> $GITHUB_ENV
 
-      - name: Set up JDK 11 if required (for the Java code only)
+      - name: Set up JDK if required (for the Java code only)
         if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}
         id: setting-env
         uses: actions/setup-java@v2
         with:
-          java-version: 11
+          java-version: ${{ inputs.java-version }}
           distribution: 'adopt'
 
       - name: Code Build ${{ inputs.app-name }} if required (for the Java code only)

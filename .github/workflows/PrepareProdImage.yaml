@@ -20,7 +20,7 @@ on:
       K8S_POD_DEPLOY_VALIDATION:
         required: true
 jobs:
-  build:
+  check-image:
     runs-on: ubuntu-22.04
     if: ${{ github.base_ref == 'main' }}
     steps:
@@ -48,9 +48,10 @@ jobs:
         id: CheckOut
         uses: actions/checkout@master
         with:
-          fetch-depth: 0
+          fetch-depth: 2
 
       - name: Get Git source branch sha
+        id: git_source_branch_sha
         shell: bash
         run: |
           set -x
@@ -75,6 +76,26 @@ jobs:
             echo "The image does not exist in Dev Repo. Stopping Pipeline."
             exit 1
 
+      - name: Export ENV variables
+        id: export_env_vars
+        shell: bash
+        run: |
+          set -x
+          
+          echo "IMAGE_PATH=${{ env.IMAGE_PATH }}" >> $GITHUB_OUTPUT
+          echo "CURRENT_IMAGE=${{ env.CURRENT_IMAGE }}" >> $GITHUB_OUTPUT
+          echo "GIT_SOURCE_BRANCH_SHA=${{ env.GIT_SOURCE_BRANCH_SHA }}" >> $GITHUB_OUTPUT
+
+    outputs:
+      GIT_SOURCE_BRANCH_SHA: "${{ steps.export_env_vars.outputs.GIT_SOURCE_BRANCH_SHA }}"
+      IMAGE_PATH: "${{ steps.export_env_vars.outputs.IMAGE_PATH }}"
+      CURRENT_IMAGE: "${{ steps.export_env_vars.outputs.CURRENT_IMAGE }}"
+
+  check-int-deployment:
+    needs:
+      - check-image
+    runs-on: ubuntu-22.04
+    steps:
       - name: Validate INT environment
         id: Validate_INT_Environment
         uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
@@ -82,11 +103,16 @@ jobs:
           google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
           app_name: ${{ inputs.app-name }}
           google_project_id: ${{ inputs.project-id }}
-          expected_git_tag: ${{ env.CURRENT_IMAGE_TAG }}
+          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           env_name: int
           max_attempt: 5
           sleep_time: 10
 
+  check-stage-deployment:
+    needs:
+      - check-image
+    runs-on: ubuntu-22.04
+    steps:
       - name: Validate STAGE environment
         id: Validate_STAGE_Environment
         uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
@@ -94,10 +120,23 @@ jobs:
           google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
           app_name: ${{ inputs.app-name }}
           google_project_id: ${{ inputs.project-id }}
-          expected_git_tag: ${{ env.CURRENT_IMAGE_TAG }}
+          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           env_name: stage
           max_attempt: 5
           sleep_time: 10
+
+  prepare-prod-image:
+    runs-on: ubuntu-22.04
+    needs:
+      - check-image
+      - check-int-deployment
+      - check-stage-deployment
+    steps:
+      - name: Check out repository
+        id: CheckOut
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 0
 
       - name: GCP Auth
         id: GCP_Auth
@@ -127,14 +166,21 @@ jobs:
             echo "It seems you have re-run this job, git tag '${NEXT_VERSION}' already exists."
             echo "NOTE: This run doesn't bring any changes."
           fi
+          
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
       - name: Create PROD version of Image
         id: Create_PROD_version
         shell: bash
         run: |
-          echo "Update microservice version '${{ env.CURRENT_IMAGE }}' -> '${{ env.NEXT_VERSION }}'"
-          NEW_IMAGE_PATH="${{ env.IMAGE_PATH }}:${{ env.NEXT_VERSION }}"
+          set -x
+
+          CURRENT_IMAGE="${{ needs.check-image.outputs.CURRENT_IMAGE }}"
+          IMAGE_PATH="${{ needs.check-image.outputs.IMAGE_PATH }}"
+          
+          echo "Update microservice version '${CURRENT_IMAGE}' -> '${{ env.NEXT_VERSION }}'"
+          NEW_IMAGE_PATH="${IMAGE_PATH}:${{ env.NEXT_VERSION }}"
           echo "new image - $NEW_IMAGE_PATH"
-          docker pull ${{ env.CURRENT_IMAGE }}
-          docker tag ${{ env.CURRENT_IMAGE }} $NEW_IMAGE_PATH
+          docker pull ${CURRENT_IMAGE}
+          docker tag ${CURRENT_IMAGE} $NEW_IMAGE_PATH
           docker push $NEW_IMAGE_PATH

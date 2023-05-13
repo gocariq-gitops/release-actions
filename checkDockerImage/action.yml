@@ -52,20 +52,19 @@ runs:
           export IMAGE_TAG="${{ inputs.docker_image_tag }}"
         fi
 
-        echo "CURRENT_IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
         export IMAGE_FULL_PATH="$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME:$IMAGE_TAG"
         echo "Checking docker image $IMAGE_FULL_PATH"
         echo "IMAGE_FULL_PATH='${IMAGE_FULL_PATH}'"
 
         if gcloud container images describe $IMAGE_FULL_PATH >/dev/null 2>&1; then
-          echo "IMAGE_EXIST=true"
-          echo "IMAGE_PATH=$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME" >> $GITHUB_ENV
-          echo "CURRENT_IMAGE=$IMAGE_FULL_PATH" >> $GITHUB_ENV
-          echo "IMAGE_EXIST=true" >> $GITHUB_ENV
+          IMAGE_EXIST="true"
         else
-          echo "IMAGE_EXIST=false"
-          echo "IMAGE_EXIST=false" >> $GITHUB_ENV
-          #remove
-          echo "IMAGE_PATH=$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME" >> $GITHUB_ENV
-          echo "CURRENT_IMAGE=$IMAGE_FULL_PATH" >> $GITHUB_ENV
+          IMAGE_EXIST="false"
         fi
+        echo "IMAGE_EXIST=$IMAGE_EXIST"
+
+        # Export env variables
+        echo "CURRENT_IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+        echo "IMAGE_EXIST=$IMAGE_EXIST" >> $GITHUB_ENV
+        echo "IMAGE_PATH=$REPO_URL/$PROJECT_ID/$REPO_NAME/$IMAGE_NAME" >> $GITHUB_ENV
+        echo "CURRENT_IMAGE=$IMAGE_FULL_PATH" >> $GITHUB_ENV

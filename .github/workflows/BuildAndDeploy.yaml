@@ -41,6 +41,9 @@ on:
       java-version:
         default: 11
         type: string
+      generate-gcp-secret-file:
+        default: "false"
+        type: string
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -143,6 +146,18 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ inputs.sonar }}
+
+      - run: 'echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp.json'
+        if: ${{ inputs.generate-gcp-secret-file == "true" }}
+        shell: bash
+        env:
+          GCP_SA_GHA_IMAGEPUSH: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+      - name: Upload a Build Artifact
+        if: ${{ inputs.generate-gcp-secret-file == "true" }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: gcp
+          path: gcp.json
 
       - name: Docker Build & Push ${{ inputs.app-name }}
         id: dockerize-push

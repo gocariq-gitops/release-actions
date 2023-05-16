@@ -42,8 +42,9 @@ on:
         default: 11
         type: string
       generate-gcp-secret-file:
-        default: "false"
+        default: 'false'
         type: string
+        required: false
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -147,29 +148,18 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ inputs.sonar }}
 
-      - run: 'echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp.json'
-        if: ${{ inputs.generate-gcp-secret-file == "true" }}
-        shell: bash
-        env:
-          GCP_SA_GHA_IMAGEPUSH: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
-      - name: Upload a Build Artifact
-        if: ${{ inputs.generate-gcp-secret-file == "true" }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: gcp
-          path: gcp.json
-
       - name: Docker Build & Push ${{ inputs.app-name }}
         id: dockerize-push
         if: ${{ env.IMAGE_EXIST == 'false' }}
         uses: gocariq-gitops/release-actions/dockerBuildNPush@v2
         with:
-          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project-id }}
           docker_repo_name: ${{ inputs.registry-name }}
           docker_file_path: ${{ inputs.docker_file_path }}
           docker_image_name: ${{ inputs.app-name }}
           docker_build_kit: '0'
+          generate-gcp-secret-file: ${{ inputs.generate-gcp-secret-file }}
 
       - name: Helm package and push
         id: helm-package-push

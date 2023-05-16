@@ -22,6 +22,9 @@ inputs:
   docker_build_kit:
     default: "1"
     description: "Build kit some images are not building with 1"
+  generate-gcp-secret-file:
+    default: "false"
+    description: "Generate gcp.json file to be able to build some applications"
 
 runs:
   using: "composite"
@@ -35,10 +38,20 @@ runs:
         shell: bash
         run: |
           gcloud auth configure-docker us-docker.pkg.dev
+
+      # TODO - All applications should be updated to read GCP creds from environment variable
+      - name: Save GCP credentials as file for the build step
+        if: ${{ inputs.generate-gcp-secret-file == 'true' }}
+        shell: bash
+        env:
+          GCP_SA_GHA_IMAGEPUSH: ${{inputs.google_credentials}}
+        run: 'echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp.json'
+
       - name: Building docker containers
         shell: bash
         run: |
           set -x
+          
           # GITHUB_HEAD_REF is set only for PRs
           if [[ -n $GITHUB_HEAD_REF ]]; then
             GITHUB_SHA=${{github.event.pull_request.head.sha}}

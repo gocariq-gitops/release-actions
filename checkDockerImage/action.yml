@@ -20,6 +20,9 @@ inputs:
     required: true
   docker_params:
     description: "Docker build params"
+  docker_registry:
+    default: "us-docker.pkg.dev"
+    description: "Docker registry path"
 
 runs:
   using: "composite"
@@ -38,11 +41,11 @@ runs:
     - name: Docker Auth with gCloud CLI
       shell: bash
       run: |
-        gcloud auth configure-docker us-docker.pkg.dev
+        gcloud auth configure-docker ${{ inputs.docker_registry }}
     - name: check docker image
       shell: bash
       run: |
-        export REPO_URL="us-docker.pkg.dev"
+        export REPO_URL=${{ inputs.docker_registry }}
         export PROJECT_ID=${{inputs.google_project_id}}
         export REPO_NAME=${{inputs.docker_repo_name}}
         export IMAGE_NAME=${{inputs.docker_image_name}}

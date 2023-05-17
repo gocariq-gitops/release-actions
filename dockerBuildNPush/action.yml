@@ -25,10 +25,18 @@ inputs:
   generate-gcp-secret-file:
     default: "false"
     description: "Generate gcp.json file to be able to build some applications"
+  generate-gcp-pypi-secret:
+    default: "false"
+    description: "Generate gcp.json file to be able to build some applications"
 
   GCP_SA_PROJECT_ACCESSOR:
     default: ""
     description: "Generate key.json file to be able to build some applications"
+    required: false
+    
+  GCP_SA_GHA_IMAGEPUSH:
+    default: ""
+    description: "Artifact Registry Credentails"
     required: false
 
 runs:
@@ -50,7 +58,7 @@ runs:
 
       # TODO - All applications should be updated to read GCP creds from environment variable
       - name: Save credentials as gcp.json file for the build step
-        if: ${{ inputs.generate-gcp-secret-file == 'true' }}
+        if: ${{ inputs.generate-gcp-pypi-secret == 'true' }}
         shell: bash
         env:
           GCP_SA_GHA_IMAGEPUSH: ${{inputs.google_credentials}}
@@ -74,6 +82,12 @@ runs:
           --format='get(payload.data)' | tr '_-' '/+' | base64 -d > \
           key.json
       # TODO - All applications should be updated to read GCP creds from environment variable ^^^
+      
+      - name: GCP Artifact Registry Login
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{env.PROJECT_ID}}
+          service_account_key: ${{ inputs.GCP_SA_GHA_IMAGEPUSH }}
 
       - name: Building docker containers
         shell: bash

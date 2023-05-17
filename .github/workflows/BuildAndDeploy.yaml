@@ -41,10 +41,14 @@ on:
       java-version:
         default: 11
         type: string
-      generate-gcp-secret-file:
-        default: 'false'
+      generate-gcp-general-secret:
+        default: "false"
         type: string
-        required: false
+        description: "Generate gcp-general.json file to be able to build some applications"
+      generate-gcp-pypi-secret:
+        default: "false"
+        type: string
+        description: "Generate gcp-pypi.json file to be able to build some applications"
       docker-build-kit:
         default: '0'
         type: string
@@ -102,7 +106,7 @@ jobs:
         id: check-image
         uses: gocariq-gitops/release-actions/checkDockerImage@v2
         with:
-          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project-id }}
           docker_repo_name:  ${{ inputs.registry-name }}
           docker_image_name: ${{ inputs.app-name }}
@@ -164,14 +168,15 @@ jobs:
           docker_file_path: ${{ inputs.docker_file_path }}
           docker_image_name: ${{ inputs.app-name }}
           docker_build_kit: ${{ inputs.docker-build-kit }}
-          generate-gcp-secret-file: ${{ inputs.generate-gcp-secret-file }}
-          GCP_SA_PROJECT_ACCESSOR: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
+          generate-gcp-pypi-secret: ${{ inputs.generate-gcp-pypi-secret }}
+          generate-gcp-general-secret: ${{ inputs.generate-gcp-general-secret }}
+          gcp-sa-project-accessor: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
 
       - name: Helm package and push
         id: helm-package-push
         uses: gocariq-gitops/release-actions/k8sHelm@v2
         with:
-          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           image_tag: ${{ inputs.image-tag }}
           registry_name: ${{ inputs.registry-name }}
           project_id: ${{ inputs.project-id }}

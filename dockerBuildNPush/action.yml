@@ -26,6 +26,11 @@ inputs:
     default: "false"
     description: "Generate gcp.json file to be able to build some applications"
 
+  GCP_SA_PROJECT_ACCESSOR:
+    default: ""
+    description: "Generate key.json file to be able to build some applications"
+    required: false
+
 runs:
   using: "composite"
   steps:
@@ -38,14 +43,37 @@ runs:
         shell: bash
         run: |
           gcloud auth configure-docker us-docker.pkg.dev
+      - name: Docker Auth with gCloud CLI
+        shell: bash
+        run: |
+          gcloud auth configure-docker us-docker.pkg.dev
 
       # TODO - All applications should be updated to read GCP creds from environment variable
-      - name: Save GCP credentials as file for the build step
+      - name: Save credentials as gcp.json file for the build step
         if: ${{ inputs.generate-gcp-secret-file == 'true' }}
         shell: bash
         env:
           GCP_SA_GHA_IMAGEPUSH: ${{inputs.google_credentials}}
-        run: 'echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp.json'
+        run: |          
+          echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp.json
+
+      - name: Setup secrets
+        if: ${{ inputs.generate-gcp-secret-file == 'true' }}
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{env.PROJECT_ID}}
+          service_account_key: ${{ inputs.GCP_SA_PROJECT_ACCESSOR }}
+      - name: Save credentials as file key.json for the build step
+        if: ${{ inputs.generate-gcp-secret-file == 'true' }}
+        shell: bash
+        env:
+          GCP_SA_GHA_IMAGEPUSH: ${{inputs.google_credentials}}
+        run: |
+          gcloud secrets versions access latest \
+          --secret=k8s-pod-deploy-JSON_KEY  \
+          --format='get(payload.data)' | tr '_-' '/+' | base64 -d > \
+          key.json
+      # TODO - All applications should be updated to read GCP creds from environment variable ^^^
 
       - name: Building docker containers
         shell: bash

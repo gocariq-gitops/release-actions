@@ -61,6 +61,8 @@ on:
         required: true
       GHA_DISPATCH_TEST:
         required: true
+      GCP_SA_PROJECT_ACCESSOR:
+        required: false
 jobs:
   build:
     if: ${{ github.ref != 'refs/heads/main' }}
@@ -160,6 +162,7 @@ jobs:
           docker_image_name: ${{ inputs.app-name }}
           docker_build_kit: '0'
           generate-gcp-secret-file: ${{ inputs.generate-gcp-secret-file }}
+          GCP_SA_PROJECT_ACCESSOR: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
 
       - name: Helm package and push
         id: helm-package-push

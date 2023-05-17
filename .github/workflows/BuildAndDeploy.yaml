@@ -45,6 +45,9 @@ on:
         default: 'false'
         type: string
         required: false
+      docker-build-kit:
+        default: '0'
+        type: string
 
     secrets:
       SLACK_WEBHOOK_URL:
@@ -160,7 +163,7 @@ jobs:
           docker_repo_name: ${{ inputs.registry-name }}
           docker_file_path: ${{ inputs.docker_file_path }}
           docker_image_name: ${{ inputs.app-name }}
-          docker_build_kit: '0'
+          docker_build_kit: ${{ inputs.docker-build-kit }}
           generate-gcp-secret-file: ${{ inputs.generate-gcp-secret-file }}
           GCP_SA_PROJECT_ACCESSOR: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
 

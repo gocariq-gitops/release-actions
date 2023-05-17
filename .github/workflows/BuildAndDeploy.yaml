@@ -70,6 +70,11 @@ on:
         required: true
       GCP_SA_PROJECT_ACCESSOR:
         required: false
+
+
+env:
+  RELEASE_ACTIONS_VERSION: v-2
+
 jobs:
   build:
     if: ${{ github.ref != 'refs/heads/main' }}
@@ -104,7 +109,7 @@ jobs:
 
       - name: Image check
         id: check-image
-        uses: gocariq-gitops/release-actions/checkDockerImage@v2
+        uses: gocariq-gitops/release-actions/checkDockerImage@v-2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project-id }}
@@ -160,7 +165,7 @@ jobs:
       - name: Docker Build & Push ${{ inputs.app-name }}
         id: dockerize-push
         if: ${{ env.IMAGE_EXIST == 'false' }}
-        uses: gocariq-gitops/release-actions/dockerBuildNPush@v2
+        uses: gocariq-gitops/release-actions/dockerBuildNPush@v-2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project-id }}
@@ -174,7 +179,7 @@ jobs:
 
       - name: Helm package and push
         id: helm-package-push
-        uses: gocariq-gitops/release-actions/k8sHelm@v2
+        uses: gocariq-gitops/release-actions/k8sHelm@v-2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           image_tag: ${{ inputs.image-tag }}
@@ -185,7 +190,7 @@ jobs:
 
       - name: GitOps update helm tag in environment repo (deploy to ${{ env.DEPLOY_ENV }})
         id: update-tag-version
-        uses: gocariq-gitops/release-actions/helmValuesUpdateWithWait@v2
+        uses: gocariq-gitops/release-actions/helmValuesUpdateWithWait@v-2
         with:
           tag: ${{ env.CURRENT_IMAGE_TAG }}
           authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
@@ -194,7 +199,7 @@ jobs:
 
       - name: Validate deployment on ${{ env.DEPLOY_ENV }}
         id: validate-git-tag-deployment
-        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@v-2
         with:
           google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
           app_name: ${{ inputs.app-name }}
@@ -207,7 +212,7 @@ jobs:
       # - name: Trigger Test Suites
       #   if: ${{ env.IMAGE_EXIST == 'false' }}
       #   id: smoke-test
-      #   uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@v2
+      #   uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@v-2
       #   with:
       #     authToken: ${{secrets.GHA_DISPATCH_TEST}}
       #     targetEnv: ${{ env.DEPLOY_ENV }}

@@ -71,23 +71,15 @@ on:
       GCP_SA_PROJECT_ACCESSOR:
         required: false
 
-
 env:
   RELEASE_ACTIONS_VERSION: v-2
 
 jobs:
-  build:
-    if: ${{ github.ref != 'refs/heads/main' }}
+  detect_env:
     runs-on: ubuntu-22.04
     steps:
-
-      - uses: act10ns/slack@v2.0.0
-        with:
-          status: starting
-          channel: ${{ inputs.slack-channel }}
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
-
       - name: Detect environment
+        id: detect-environment
         shell: bash
         run: |
           set -x
@@ -96,14 +88,31 @@ jobs:
           else
             DEPLOY_ENV="${{ inputs.deploy-env }}"
           fi
-
+          
           # Cancel on an attempt to deploy to a non-testing environment
           if [[ "${DEPLOY_ENV}" != "dev" && "${DEPLOY_ENV}" != "int"  && "${DEPLOY_ENV}" != "stage"  ]]; then
             echo "Deployment to PROD is not allowed, use 'release-manifest' for deployment to PROD."
             exit 1
           fi
           
-          echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_ENV
+          echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_OUTPUT
+    outputs:
+      DEPLOY_ENV: ${{ steps.detect-environment.outputs.DEPLOY_ENV }}
+
+  build:
+    needs:
+      - detect_env
+    runs-on: ubuntu-22.04
+    env:
+      DEPLOY_ENV: ${{ needs.detect_env.outputs.DEPLOY_ENV }}
+
+    steps:
+
+      - uses: act10ns/slack@v2.0.0
+        with:
+          status: starting
+          channel: ${{ inputs.slack-channel }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - uses: actions/checkout@v3
 

@@ -1,0 +1,75 @@
+name: "Helm package, push & install"
+description: "Helm package, push & install"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  image_tag:
+    description: "Google Project Id"
+    required: true
+  registry_name:
+    description: "Docker File Path"
+    required: true
+  registry_host_name:
+    description: "Docker File Path"
+    required: true
+  project_id:
+    description: "Docker Image Name"
+    required: true
+  gke_google_credentials:
+    description: "Docker Repo Name"
+    required: true
+  cluster_name:
+    description: "Google Credentials"
+    required: true
+  location:
+    description: "Google Credentials"
+    required: true
+  chart_name:
+    description: "Google Credentials"
+    required: true
+
+
+
+runs:
+  using: "composite"
+  steps:
+      - uses: google-github-actions/auth@v0
+        with:
+          credentials_json: '${{ inputs.google_credentials }}'
+
+      - uses: google-github-actions/setup-gcloud@v0
+        with:
+          version: latest
+          
+      - name: login to artifact registry
+        shell: bash
+        run: |
+          set -x
+          gcloud auth configure-docker ${{ inputs.registry_host_name }} --quiet
+          
+      - name: helm package
+        shell: bash
+        run: |
+          set -x
+          helm dependency build ./charts/${{ inputs.chart_name }}/
+          helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.image_tag}}
+      
+      - name: helm push
+        #         if: ${{ github.event_name == 'push' }}
+        shell: bash
+        run: |
+          set -x
+          helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}
+          
+      - uses: google-github-actions/auth@v0
+        with:
+          credentials_json: '${{ inputs.gke_google_credentials }}'
+
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v0'
+        with:
+          cluster_name: 'cariq-stage'
+          location: 'us-central1'
+          credentials_json: '${{ inputs.gke_google_credentials }}'

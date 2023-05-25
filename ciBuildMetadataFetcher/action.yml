@@ -1,0 +1,22 @@
+name: "Build Metadata Fetcher"
+description: "fetches metadata from applications.yaml"
+
+runs:
+  using: "composite"
+  steps:
+      - uses: mikefarah/yq@master
+      - name: app metadata fetcher
+        shell: bash
+        run: |
+          set -x
+          which yq
+          yq -o=json '.' applications.yaml > applications.json
+          cat applications.json
+          # docker file path
+          dockerFilePath=`cat applications.json | jq -c '.[] | select(.name | contains("${{ matrix.app }}")).docker_file_path'`
+          echo "DOCKER_FILE_PATH=$(echo $dockerFilePath)" >> $GITHUB_ENV
+          echo "dockerFilePath=$dockerFilePath"
+          # code build script path
+          buildScriptPath=`cat applications.json | jq -c '.[] | select(.name | contains("${{ matrix.app }}")).build_script_path'`
+          echo "BUILD_SCRIPT_PATH=$(echo $buildScriptPath)" >> $GITHUB_ENV
+          echo "buildScriptPath=$buildScriptPath"

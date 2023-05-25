@@ -1,0 +1,57 @@
+name: "Helm package install"
+description: "Helm package install"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  image_tag:
+    description: "Google Project Id"
+    required: true
+  registry_name:
+    description: "Docker File Path"
+    required: true
+  registry_host_name:
+    description: "Docker File Path"
+    required: true
+  project_id:
+    description: "Gcp Project Id"
+    required: true
+  gke_google_credentials:
+    description: "gke google creds"
+    required: true
+  cluster_name:
+    description: "Cluster Name"
+    required: true
+  location:
+    description: "Location"
+    required: true
+  chart_name:
+    description: "Chart name"
+    required: true
+  branch_name:
+    description: "Branch Name"
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+
+      - uses: google-github-actions/auth@v0
+        with:
+          credentials_json: '${{ inputs.gke_google_credentials }}'
+
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v0'
+        with:
+          cluster_name: ${{ inputs.cluster_name }}
+          location: ${{ inputs.location }}
+          credentials_json: '${{ inputs.gke_google_credentials }}'
+
+      - name: helm deploy
+        #if: ${{ github.event_name == 'push' }}
+        shell: bash
+        run: |
+          set -x
+          helm -n ${{ inputs.branch_name }} upgrade --install ${{inputs.chart_name}} oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}/${{inputs.chart_name}} -f ./charts/${{inputs.chart_name}}/values-${{inputs.branch_name}}.yaml --version ${{inputs.image_tag}}

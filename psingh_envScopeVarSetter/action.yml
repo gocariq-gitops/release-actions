@@ -1,0 +1,16 @@
+name: "psingh:Env and Scope Var Setter"
+
+runs:
+  using: "composite"
+  steps:
+      - name: Set secrets as env var
+        shell: bash
+        env:
+          GCP_SA_GHA_PLAYPCI_DEPLOYMENT: ${{ secrets.GCP_SA_GHA_PLAYPCI_DEPLOYMENT }}
+          GCP_SA_GHA_PLAYPCI_TERRAFORM: ${{ secrets.GCP_SA_GHA_PLAYPCI_TERRAFORM }}
+        run: |
+          set -x
+          #echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+          echo "${{env.GCP_SA_GHA_PLAYPCI_DEPLOYMENT}}"
+          echo "${{env.GCP_SA_GHA_PLAYPCI_TERRAFORM}}"
+          

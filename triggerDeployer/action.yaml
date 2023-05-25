@@ -1,0 +1,23 @@
+name: Trigger Deploy and wait
+description: This action trigger deployment on dev
+inputs:
+  token:
+    required: true
+    description: Github Auth Token
+  repoName:
+    required: true
+    description: GitHub Repo Name
+  gitSha:
+    required: true
+    description: GitHub Sha
+  envName:
+    required: true
+    description: Env name it will prefix the Deployer.yaml file, devDeployer.yaml for example
+
+runs:
+  using: docker
+  image: 'Dockerfile'
+
+branding:
+  icon: arrow-down
+  color: blue

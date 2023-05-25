@@ -1,0 +1,32 @@
+name: Test validate deployment
+permissions: write-all
+
+
+'on':
+  workflow_dispatch:
+    inputs:
+      deployEnv:
+        description: Name of env to be deploy to
+        required: true
+      appName:
+        description: Name of deployed application
+        required: true
+      tag:
+        description: Tag or git sha
+        required: true
+jobs:
+  updateTag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Validate deployment
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@main
+        with:
+          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+          app_name: test
+          google_project_id: test
+          expected_git_tag: 'jljlj'
+          env_name: 'dev'
+          max_attempt: 30
+          sleep_time: 10
+      

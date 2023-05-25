@@ -1,0 +1,29 @@
+name: Trigger Workload and Wait until completion
+permissions: write-all
+
+description: This action trigger deployment
+inputs:
+  authToken:
+    required: true
+    description: Token of the user who has permission to trigger action
+  targetEnv:
+    required: false
+    description: Target Deployed Env
+  tag:
+    required: true
+    description: git sha which should be deployed
+  workFlowFileName:
+    required: true
+    description: Name of the yaml file workflow
+  targetRepo:
+    required: false
+    description: name of the github repository
+
+
+runs:
+  using: docker
+  image: 'Dockerfile'
+
+branding:
+  icon: arrow-down
+  color: blue

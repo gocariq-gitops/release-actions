@@ -1,0 +1,33 @@
+name: Trigger Deploy and wait
+description: This action trigger deployment
+inputs:
+  user:
+    required: true
+    description: Github user
+  token:
+    required: true
+    description: Token of the user who has permision to trigger action
+  repo:
+    required: true
+    description: repo name where action will be triggered
+  workflow:
+    required: true
+    description: Name of workflow yml file without extension
+  branch:
+    required: false
+    default: 'main'
+    description: Branch from where to trigger test
+  gitSha:
+    required: true
+    description: git sha which should be deployed
+  cariqDockerRepo:
+    required: true
+    description: target test env
+
+runs:
+  using: docker
+  image: 'Dockerfile'
+
+branding:
+  icon: arrow-down
+  color: blue

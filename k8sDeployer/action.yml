@@ -1,0 +1,53 @@
+  name: "Deploy App to Kubernetes"
+
+  inputs:
+    google_credentials:
+      required: true
+    google_project_id:
+      required: true
+    k8s_cluster_name:
+      required: true
+    k8s_cluster_region:
+      required: true
+    k8s_yaml_file:
+      required: true
+    CQ_APP_NAME:
+      required: true
+    CQ_APP_REPLICA:
+      required: true
+    CQ_APP_IMAGE_PATH:
+      required: true
+    CQ_APP_PORT:
+      required: true
+    CQ_ENV:
+      required: true
+
+  runs:
+    using: "composite"
+    steps:
+        - uses: danielr1996/envsubst-action@1.0.0
+          env:
+            CQ_APP_NAME: ${{inputs.CQ_APP_NAME}}
+            CQ_APP_REPLICA: ${{inputs.CQ_APP_REPLICA}}
+            CQ_APP_IMAGE_PATH: ${{inputs.CQ_APP_IMAGE_PATH}}
+            CQ_APP_PORT: ${{inputs.CQ_APP_PORT}}
+            CQ_ENV: ${{inputs.CQ_ENV}}
+          with:
+            input: ${{inputs.k8s_yaml_file}}
+            output: app.yaml
+        - id: 'auth'
+          uses: 'google-github-actions/auth@v1'
+          with:
+            credentials_json: '${{ inputs.google_credentials }}'
+        - id: 'get-credentials'
+          uses: 'google-github-actions/get-gke-credentials@v1'
+          with:
+            cluster_name: ${{inputs.k8s_cluster_name}}
+            location: ${{inputs.k8s_cluster_region}}
+        - name: perform k8s deployment
+          shell: bash
+          run: |
+            set -x
+            ls -lrt app.yaml
+            cat app.yaml
+            kubectl apply -f app.yaml

@@ -1,0 +1,33 @@
+name: Trigger Build and wait
+description: This action trigger build with parameters and waits
+inputs:
+  user:
+    required: true
+    description: Github user
+  token:
+    required: true
+    description: Token of the user who has permision to trigger action
+  repo:
+    required: true
+    description: repo name where action will be triggered
+  workflow:
+    required: true
+    description: Name of workflow yml file without extension
+  branch:
+    required: false
+    default: 'main'
+    description: Branch from where to trigger test
+  group:
+    required: true
+    description: name of the test group for which test will be triggered
+  dockerRepo:
+    required: true
+    description: target test env
+
+runs:
+  using: docker
+  image: 'Dockerfile'
+
+branding:
+  icon: arrow-down
+  color: blue

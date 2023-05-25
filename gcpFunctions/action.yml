@@ -1,0 +1,67 @@
+name: "Helm package, push & install"
+description: "Helm package, push & install"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  name:
+    description: "name of function"
+    required: true
+  project_id:
+    description: "Google Cloud Project ID"
+    required: true
+  region:
+    description: "Google Cloud Region"
+    required: true
+  http_trigger:
+    description: "Boolean - HTTP Trigger enabled?"
+    required: true
+  source_dir:
+    description: "Path of source code"
+    required: true
+  runtime:
+    description: "Function runtime"
+    required: true
+  memory:
+    description: "Function memory"
+    required: true
+  entry_point:
+    description: "Entrypoint main function"
+    required: true
+  envars:
+    description: "Env Variables of main function"
+    required: true
+  service_account:
+    description: "Service Account of main function"
+    required: false
+  secrets:
+    description: "Secrets of main function"
+    required: false
+    
+
+
+
+runs:
+  using: "composite"
+  steps:
+      - uses: google-github-actions/auth@v1
+        with:
+          credentials_json: '${{ inputs.google_credentials }}'
+
+      - uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: latest
+
+      - name: login to artifact registry
+        shell: bash
+        run: |
+          echo CARIQ_ENV: ${{inputs.envars}} > env.yaml
+          cat env.yaml
+          echo "invoke gcloud cli"
+          if test -z ${{inputs.secrets}}
+          then
+            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --trigger-http
+          else
+            gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --set-secrets ${{inputs.secrets}} --trigger-http
+          fi

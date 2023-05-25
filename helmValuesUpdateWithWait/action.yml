@@ -1,0 +1,26 @@
+name: Trigger Deploy and wait
+permissions: write-all
+
+description: This action trigger deployment
+inputs:
+  authToken:
+    required: true
+    description: Token of the user who has permision to trigger action
+  deployEnv:
+    required: false
+    description: Branch from where to trigger test
+  tag:
+    required: true
+    description: git sha which should be deployed
+  appName:
+    required: true
+    description: app name to be deployed
+
+
+runs:
+  using: docker
+  image: 'Dockerfile'
+
+branding:
+  icon: arrow-down
+  color: blue

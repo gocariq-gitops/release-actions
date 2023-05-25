@@ -1,0 +1,29 @@
+name: Test update helm chart tag
+permissions: write-all
+
+
+'on':
+  workflow_dispatch:
+    inputs:
+      deployEnv:
+        description: Name of env to be deploy to
+        required: true
+      appName:
+        description: Name of deployed application
+        required: true
+      tag:
+        description: Tag or git sha
+        required: true
+jobs:
+  updateTag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: GitOps update helm tag
+        uses: gocariq-gitops/release-actions/triggerHelmTagUpdate@main
+        with:
+          tag: ${{ env.SHORT_SHA }}
+          ghaToken: ${{secrets.GHA_SIGN_COMMIT_KEY}}
+          appName: ${{ matrix.app }}
+          deployEnv: ${{ steps.branch-name.outputs.current_branch }}
+      

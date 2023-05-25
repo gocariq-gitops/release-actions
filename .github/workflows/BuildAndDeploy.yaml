@@ -1,0 +1,267 @@
+name: Build & Deploy To Testing Env (CICDv2)
+permissions: write-all
+
+on:
+  workflow_call:
+    inputs:
+      project-id:
+        default: 'gocariq-platform'
+        type: string
+      app-name:
+        required: true
+        type: string
+      slack-channel:
+        default: '#release'
+        type: string
+      deploy-env:
+        type: string
+        required: false
+      deploy-env-on-push:
+        default: 'dev'
+        type: string
+        required: false
+      registry-name:
+        default: 'cariq'
+        type: string
+      image-tag:
+        default: '0.1.0'
+        type: string
+      sonar:
+        default: 'https://sonar.gocariq.com'
+        type: string
+      sonar_enabled:
+        default: 'true'
+        type: string
+      docker_file_path:
+        default: '.'
+        type: string
+      build_script_path:
+        default: build.sh
+        type: string
+      java-version:
+        default: 11
+        type: string
+      generate-gcp-general-secret:
+        default: "false"
+        type: string
+        description: "Generate gcp-general.json file to be able to build some applications"
+      generate-gcp-pypi-secret:
+        default: "false"
+        type: string
+        description: "Generate gcp-pypi.json file to be able to build some applications"
+      docker-build-kit:
+        default: '0'
+        type: string
+      docker_params:
+        default: ""
+        type: string
+      docker_params_token_on_build:
+        default: "false"
+        type: string
+        description: "Use docker build arg '--build-arg token=secrets.GHA_DEVOPS_DISPATCH' if is true"
+
+    secrets:
+      SLACK_WEBHOOK_URL:
+        required: true
+      SONAR_TOKEN:
+        required: true
+      GCP_SA_GHA_IMAGEPUSH:
+        required: true
+      GKE_SA_GHA_PUSHER_CREDENTIALS:
+        required: true
+      GHA_DEVOPS_DISPATCH:
+        required: true
+      K8S_POD_DEPLOY_VALIDATION:
+        required: true
+      GHA_DISPATCH_TEST:
+        required: true
+      GCP_SA_PROJECT_ACCESSOR:
+        required: false
+
+env:
+  RELEASE_ACTIONS_VERSION: v-2
+
+jobs:
+  detect_env:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Detect environment
+        id: detect-environment
+        shell: bash
+        run: |
+          set -x
+          if [[ -z "${{ inputs.deploy-env }}" ]]; then
+            DEPLOY_ENV=${{ inputs.deploy-env-on-push }}
+          else
+            DEPLOY_ENV="${{ inputs.deploy-env }}"
+          fi
+          
+          # Cancel on an attempt to deploy to a non-testing environment
+          if [[ "${DEPLOY_ENV}" != "dev" && "${DEPLOY_ENV}" != "int"  && "${DEPLOY_ENV}" != "stage"  ]]; then
+            echo "Deployment to PROD is not allowed, use 'release-manifest' for deployment to PROD."
+            exit 1
+          fi
+          
+          echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_OUTPUT
+    outputs:
+      DEPLOY_ENV: ${{ steps.detect-environment.outputs.DEPLOY_ENV }}
+
+  build:
+    needs:
+      - detect_env
+    runs-on: ubuntu-22.04
+    env:
+      DEPLOY_ENV: ${{ needs.detect_env.outputs.DEPLOY_ENV }}
+
+    steps:
+
+      - uses: act10ns/slack@v2.0.0
+        with:
+          status: starting
+          channel: ${{ inputs.slack-channel }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - uses: actions/checkout@v3
+
+      - name: Image check
+        id: check-image
+        uses: gocariq-gitops/release-actions/checkDockerImage@v2
+        with:
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
+          google_project_id: ${{ inputs.project-id }}
+          docker_repo_name:  ${{ inputs.registry-name }}
+          docker_image_name: ${{ inputs.app-name }}
+
+      - name: Dockerfile lint
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        id: validate-dockerfile
+        shell: bash
+        run: |
+          docker run --rm -e HADOLINT_IGNORE=DL3007,DL3008,DL3018 -i hadolint/hadolint < Dockerfile
+
+      - name: Helm lint
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        id: validate-chart
+        shell: bash
+        run: |
+          helm lint ./charts/${{ inputs.app-name }}/
+
+      - name: Check if it is Java
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        shell: bash
+        run: |
+          set -x
+          [[ -z "$(find ./ -name *.java |head -n 1)" ]] && IS_JAVA_CODE_REPO="false" || IS_JAVA_CODE_REPO="true"
+          echo "IS_JAVA_CODE_REPO=$IS_JAVA_CODE_REPO" >> $GITHUB_ENV
+      - name: Set up JDK if required (for the Java code only)
+        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}
+        id: setting-env
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ inputs.java-version }}
+          distribution: 'adopt'
+
+      - name: Check if it is GoLang
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        shell: bash
+        run: |
+          set -x
+          [[ -z "$(cat Dockerfile |grep -r 'FROM[[:space:]]golang')" ]] && IS_GOLANG_CODE_REPO="false" || IS_GOLANG_CODE_REPO="true"
+          echo "IS_GOLANG_CODE_REPO=$IS_GOLANG_CODE_REPO" >> $GITHUB_ENV
+      - name: Setup GoLang if required (for GoLang code only)
+        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_GOLANG_CODE_REPO == 'true' }}
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{env.GO_VERSION}}
+      - name: Setup netrc if required (for GoLang code only)
+        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_GOLANG_CODE_REPO == 'true' }}
+        uses: extractions/netrc@v1
+        with:
+          machine: github.com
+          username: gocariq-gitops
+          password: ${{secrets.GHA_DEVOPS_DISPATCH}}
+
+      - name: Code Build and Unittests if required (for Java and GoLang)
+        if: ${{ env.IMAGE_EXIST == 'false' && (env.IS_JAVA_CODE_REPO == 'true' || env.IS_GOLANG_CODE_REPO == 'true') }}
+        shell: bash
+        run: |
+          set -x
+          SONAR_URL=${{ inputs.sonar }}
+          SONAR_TOKEN=${{ secrets.SONAR_TOKEN }}
+          [[ -x ./${{ inputs.build_script_path }} ]] && ./${{ inputs.build_script_path }} || true
+
+      - name: SonarQube Scan
+        id: sonar-scan
+        if: ${{ env.IMAGE_EXIST == 'false' && inputs.sonar_enabled == 'true' }}
+        uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ inputs.sonar }}
+
+      - name: Docker Build & Push ${{ inputs.app-name }}
+        id: dockerize-push
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        uses: gocariq-gitops/release-actions/dockerBuildNPush@v2
+        with:
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
+          google_project_id: ${{ inputs.project-id }}
+          docker_repo_name: ${{ inputs.registry-name }}
+          docker_file_path: ${{ inputs.docker_file_path }}
+          docker_image_name: ${{ inputs.app-name }}
+          docker_params: ${{ inputs.docker_params }}
+          docker_params_token_on_build: ${{ inputs.docker_params_token_on_build }}
+          docker_build_kit: ${{ inputs.docker-build-kit }}
+          generate-gcp-pypi-secret: ${{ inputs.generate-gcp-pypi-secret }}
+          generate-gcp-general-secret: ${{ inputs.generate-gcp-general-secret }}
+          gcp-sa-project-accessor: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
+          gha-devops-dispatch-token: ${{secrets.GHA_DEVOPS_DISPATCH}}
+
+      - name: Helm package and push
+        id: helm-package-push
+        uses: gocariq-gitops/release-actions/k8sHelm@v2
+        with:
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
+          image_tag: ${{ inputs.image-tag }}
+          registry_name: ${{ inputs.registry-name }}
+          project_id: ${{ inputs.project-id }}
+          gke_google_credentials: ${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}
+          chart_name: ${{ inputs.app-name }}
+
+      - name: GitOps update helm tag in environment repo (deploy to ${{ env.DEPLOY_ENV }})
+        id: update-tag-version
+        uses: gocariq-gitops/release-actions/helmValuesUpdateWithWait@v2
+        with:
+          tag: ${{ env.CURRENT_IMAGE_TAG }}
+          authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
+          appName: ${{ inputs.app-name }}
+          deployEnv: ${{ env.DEPLOY_ENV }}
+
+      - name: Validate deployment on ${{ env.DEPLOY_ENV }}
+        id: validate-git-tag-deployment
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
+        with:
+          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+          app_name: ${{ inputs.app-name }}
+          google_project_id: ${{ inputs.project-id }}
+          expected_git_tag: ${{ env.CURRENT_IMAGE_TAG }}
+          env_name: ${{ env.DEPLOY_ENV }}
+          max_attempt: 30
+          sleep_time: 10
+
+      # - name: Trigger Test Suites
+      #   if: ${{ env.IMAGE_EXIST == 'false' }}
+      #   id: smoke-test
+      #   uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@v2
+      #   with:
+      #     authToken: ${{secrets.GHA_DISPATCH_TEST}}
+      #     targetEnv: ${{ env.DEPLOY_ENV }}
+      #     tag: ${{ env.CURRENT_IMAGE_TAG }}
+      #     workFlowFileName: core-service-test
+
+      - uses: act10ns/slack@v2.0.0
+        with:
+          status: ${{ job.status }}
+          steps: ${{ toJson(steps) }}
+          channel: ${{ inputs.slack-channel }}
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        if: always()

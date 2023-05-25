@@ -1,0 +1,186 @@
+name: Prepare Release Image
+permissions: write-all
+
+on:
+  workflow_call:
+    inputs:
+      project-id:
+        default: 'gocariq-platform'
+        type: string
+      app-name:
+        required: true
+        type: string
+      registry-name:
+        default: 'cariq'
+        type: string
+
+    secrets:
+      GCP_SA_GHA_IMAGEPUSH:
+        required: true
+      K8S_POD_DEPLOY_VALIDATION:
+        required: true
+jobs:
+  check-image:
+    runs-on: ubuntu-22.04
+    if: ${{ github.base_ref == 'main' }}
+    steps:
+#      - name: Check out repository
+#        uses: actions/checkout@v3
+#        with:
+#          ref: ${{ github.base_ref }}
+#          fetch-depth: 0
+#
+#      - name: Checking the availability of the image
+#        id: ImageCheck
+#        uses: gocariq-gitops/release-actions/checkDockerImage@v2
+#        with:
+#          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+#          google_project_id: ${{ inputs.project-id }}
+#          docker_repo_name:  ${{ inputs.registry-name }}
+#          docker_image_name: ${{ inputs.app-name }}
+
+      - name: Print Git source branch name
+        shell: bash
+        run: |
+          echo "soure branch - ${{ github.base_ref }}"
+
+      - name: Check out repository
+        id: CheckOut
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 2
+
+      - name: Get Git source branch sha
+        id: git_source_branch_sha
+        shell: bash
+        run: |
+          set -x
+          GIT_SOURCE_BRANCH_SHA=$(git log -n 1 |grep "Merge:\s*\d*\s*\d*" | awk "{print \$3}")
+          echo "GIT_SOURCE_BRANCH_SHA=${GIT_SOURCE_BRANCH_SHA}" >> $GITHUB_ENV
+
+      - name: Checking the availability of the image
+        id: ImageCheck
+        uses: gocariq-gitops/release-actions/checkDockerImage@v2
+        with:
+          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+          google_project_id: ${{ inputs.project-id }}
+          docker_repo_name:  ${{ inputs.registry-name }}
+          docker_image_name: ${{ inputs.app-name }}
+          docker_image_tag: ${{ env.GIT_SOURCE_BRANCH_SHA }}
+
+      - name: Stop if the image doesn't exist
+        id: CheckImage
+        if: ${{ env.IMAGE_EXIST == 'false' }}
+        shell: bash
+        run: |
+            echo "The image does not exist in Dev Repo. Stopping Pipeline."
+            exit 1
+
+      - name: Export ENV variables
+        id: export_env_vars
+        shell: bash
+        run: |
+          set -x
+          
+          echo "IMAGE_PATH=${{ env.IMAGE_PATH }}" >> $GITHUB_OUTPUT
+          echo "CURRENT_IMAGE=${{ env.CURRENT_IMAGE }}" >> $GITHUB_OUTPUT
+          echo "GIT_SOURCE_BRANCH_SHA=${{ env.GIT_SOURCE_BRANCH_SHA }}" >> $GITHUB_OUTPUT
+
+    outputs:
+      GIT_SOURCE_BRANCH_SHA: "${{ steps.export_env_vars.outputs.GIT_SOURCE_BRANCH_SHA }}"
+      IMAGE_PATH: "${{ steps.export_env_vars.outputs.IMAGE_PATH }}"
+      CURRENT_IMAGE: "${{ steps.export_env_vars.outputs.CURRENT_IMAGE }}"
+
+  check-int-deployment:
+    needs:
+      - check-image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Validate INT environment
+        id: Validate_INT_Environment
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
+        with:
+          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+          app_name: ${{ inputs.app-name }}
+          google_project_id: ${{ inputs.project-id }}
+          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          env_name: int
+          max_attempt: 5
+          sleep_time: 10
+
+  check-stage-deployment:
+    needs:
+      - check-image
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Validate STAGE environment
+        id: Validate_STAGE_Environment
+        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
+        with:
+          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+          app_name: ${{ inputs.app-name }}
+          google_project_id: ${{ inputs.project-id }}
+          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          env_name: stage
+          max_attempt: 5
+          sleep_time: 10
+
+  prepare-prod-image:
+    runs-on: ubuntu-22.04
+    needs:
+      - check-image
+      - check-int-deployment
+      - check-stage-deployment
+    steps:
+      - name: Check out repository
+        id: CheckOut
+        uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+
+      - name: GCP Auth
+        id: GCP_Auth
+        uses: google-github-actions/setup-gcloud@v0.2.0
+        with:
+          project_id: ${{ inputs.project-id }}
+          service_account_key: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+
+      - name: Docker Auth
+        id: Docker_Auth
+        shell: bash
+        run: |
+          gcloud auth configure-docker us-docker.pkg.dev
+
+      - name: Get Next Version
+        id: Get_PROD_version
+        shell: bash
+        run: |
+          NEXT_VERSION=$(docker run --rm -v $(pwd):/app -w /app --entrypoint "" us-docker.pkg.dev/gocariq-platform/cariq/semver-helper \
+              sh -c "git config --global --add safe.directory /app && semver-helper --next-ver")
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+          if [[ -z $(git tag -l |grep "${NEXT_VERSION}") ]]; then
+            git tag ${NEXT_VERSION}
+            git push --tags
+          else
+            echo ""
+            echo "It seems you have re-run this job, git tag '${NEXT_VERSION}' already exists."
+            echo "NOTE: This run doesn't bring any changes."
+          fi
+          
+          echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
+
+      - name: Create PROD version of Image
+        id: Create_PROD_version
+        shell: bash
+        run: |
+          set -x
+
+          CURRENT_IMAGE="${{ needs.check-image.outputs.CURRENT_IMAGE }}"
+          IMAGE_PATH="${{ needs.check-image.outputs.IMAGE_PATH }}"
+          
+          echo "Update microservice version '${CURRENT_IMAGE}' -> '${{ env.NEXT_VERSION }}'"
+          NEW_IMAGE_PATH="${IMAGE_PATH}:${{ env.NEXT_VERSION }}"
+          echo "new image - $NEW_IMAGE_PATH"
+          docker pull ${CURRENT_IMAGE}
+          docker tag ${CURRENT_IMAGE} $NEW_IMAGE_PATH
+          docker push $NEW_IMAGE_PATH

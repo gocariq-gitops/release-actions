@@ -1,0 +1,81 @@
+name: "Validate Deployement"
+description: "Validate Deployment"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  google_project_id:
+    description: "Google Project Id"
+    required: true
+  app_name:
+    description: "App name"
+    required: true
+  env_name:
+    description: "Env name"
+    required: true
+  expected_git_tag:
+    description: "Expected Git tag"
+    required: true
+  max_attempt:
+    description: "Max check attempt"
+    required: true
+  sleep_time:
+    description: "Sleep time"
+    required: true
+  cluster_name:
+    description: "Kubernetes cluster name"
+    default: 'cariq-stage'
+    required: false
+  cluster_location:
+    description: "Kubernetes cluster location"
+    default: 'us-central1'
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+  
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ inputs.google_credentials }}'
+          
+      - id: 'get-credentials'
+        uses: 'google-github-actions/get-gke-credentials@v1'
+        with:
+          cluster_name: ${{ inputs.cluster_name }}
+          location: ${{ inputs.cluster_location }}
+          
+      
+
+      - name: Validate Deployment
+        shell: bash
+        run: |
+          set -x
+          COUNTER=1
+          APP_NAME=${{inputs.app_name}}
+          ENV_NAME=${{inputs.env_name}}
+          PROJECT_ID=${{inputs.google_project_id}}
+          MAX_ATTEMPT=${{inputs.max_attempt}}
+          SLEEP_TIME=${{inputs.sleep_time}}
+          EXPECTED_GIT_TAG=${{inputs.expected_git_tag}}
+          IS_DEPLOYMENT_SUCCESS=1
+          while [ $COUNTER -le $MAX_ATTEMPT ]
+          do
+             OUT=$(kubectl get deployment $APP_NAME --namespace $ENV_NAME -o=jsonpath='{.spec.template.spec.containers[0].image}')
+             echo $OUT
+             ACTUAL_GIT_TAG=${OUT##*:}
+             echo "ACTUAL GIT TAG ${ACTUAL_GIT_TAG}"
+             echo "EXPECTED GIT TAG ${EXPECTED_GIT_TAG}"
+             if [[ "$EXPECTED_GIT_TAG" == "$ACTUAL_GIT_TAG" ]]; then
+               echo "ACTUAL GIT TAG:$ACTUAL_GIT_TAG IS MATCHED WITH EXPECTED $EXPECTED_GIT_TAG"
+               IS_DEPLOYMENT_SUCCESS=0
+               break
+             else
+               echo "ACTUAL GIT TAG:$ACTUAL_GIT_TAG NOT MATCHED WITH EXPECTED $EXPECTED_GIT_TAG"
+             fi
+             (( COUNTER++ ))
+             sleep $SLEEP_TIME
+          done
+          exit $IS_DEPLOYMENT_SUCCESS

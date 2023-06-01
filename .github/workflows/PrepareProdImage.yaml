@@ -17,28 +17,13 @@ on:
     secrets:
       GCP_SA_GHA_IMAGEPUSH:
         required: true
-      K8S_POD_DEPLOY_VALIDATION:
+      GHA_DEVOPS_DISPATCH:
         required: true
 jobs:
   check-image:
     runs-on: ubuntu-22.04
     if: ${{ github.base_ref == 'main' }}
     steps:
-#      - name: Check out repository
-#        uses: actions/checkout@v3
-#        with:
-#          ref: ${{ github.base_ref }}
-#          fetch-depth: 0
-#
-#      - name: Checking the availability of the image
-#        id: ImageCheck
-#        uses: gocariq-gitops/release-actions/checkDockerImage@v2
-#        with:
-#          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
-#          google_project_id: ${{ inputs.project-id }}
-#          docker_repo_name:  ${{ inputs.registry-name }}
-#          docker_image_name: ${{ inputs.app-name }}
-
       - name: Print Git source branch name
         shell: bash
         run: |
@@ -98,15 +83,12 @@ jobs:
     steps:
       - name: Validate INT environment
         id: Validate_INT_Environment
-        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
+        uses: gocariq-gitops/release-actions/serviceIsDeployed@v2
         with:
-          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
-          app_name: ${{ inputs.app-name }}
-          google_project_id: ${{ inputs.project-id }}
-          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
+          app_name: ${{ inputs.app_name }}
           env_name: int
-          max_attempt: 5
-          sleep_time: 10
+          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
 
   check-stage-deployment:
     needs:
@@ -115,15 +97,12 @@ jobs:
     steps:
       - name: Validate STAGE environment
         id: Validate_STAGE_Environment
-        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
+        uses: gocariq-gitops/release-actions/serviceIsDeployed@v2
         with:
-          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
-          app_name: ${{ inputs.app-name }}
-          google_project_id: ${{ inputs.project-id }}
-          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
+          app_name: ${{ inputs.app_name }}
           env_name: stage
-          max_attempt: 5
-          sleep_time: 10
+          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
 
   prepare-prod-image:
     runs-on: ubuntu-22.04

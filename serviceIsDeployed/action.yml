@@ -2,12 +2,6 @@ name: "Check if service is deployed"
 description: "Check if service is already deployed"
 
 inputs:
-  google_credentials:
-    description: "Google Credentials"
-    required: true
-  google_project_id:
-    description: "Google Project Id"
-    required: true
   app_name:
     description: "App name"
     required: true
@@ -17,43 +11,30 @@ inputs:
   expected_git_tag:
     description: "Expected Git tag"
     required: true
-  cluster_name:
-    description: "Kubernetes cluster name"
-    default: 'cariq-stage'
-    required: false
-  cluster_location:
-    description: "Kubernetes cluster location"
-    default: 'us-central1'
-    required: false
+  token:
+    description: "GitHub token for git clone environments repository"
+    required: true
 
 runs:
   using: "composite"
   steps:
-  
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v1'
-        with:
-          credentials_json: '${{ inputs.google_credentials }}'
-          
-      - id: 'get-credentials'
-        uses: 'google-github-actions/get-gke-credentials@v1'
-        with:
-          cluster_name: '${{ inputs.cluster_name }}'
-          location: '${{ inputs.cluster_location }}'
-          
-      - name: "Check if service is deployed"
-        shell: bash
-        run: |
-          set -x
+    - name: Check out repository 'environments'
+      uses: actions/checkout@master
+      with:
+        repository: gocariq/environments
+        ref: main
+        path: ./gocariq-environments
+        token: ${{ inputs.token }}
 
-          SERVICE_IS_DEPLOYED="false"
-          
-          OUT=$(kubectl get deployment ${{inputs.app_name}} --namespace ${{inputs.env_name}} -o=jsonpath='{.spec.template.spec.containers[0].image}')
-          echo $OUT
-          ACTUAL_GIT_TAG=${OUT##*:}
-
-          if [[ "${{inputs.expected_git_tag}}" == "$ACTUAL_GIT_TAG" ]]; then
-            SERVICE_IS_DEPLOYED="true"
-          fi
-          
-          echo "SERVICE_IS_DEPLOYED=$SERVICE_IS_DEPLOYED" >> $GITHUB_ENV
+    - name: "Check if service is deployed"
+      shell: bash
+      run: |
+        set -x
+        
+        SERVICE_IS_DEPLOYED="false"
+        ACTUAL_GIT_TAG=$(yq ".monochart.image.tag" ./gocariq-environments/environments/${{ inputs.env_name }}/apps/${{ inputs.app_name }}/values.yaml)
+        if [[ "${{inputs.expected_git_tag}}" == "$ACTUAL_GIT_TAG" ]]; then
+          SERVICE_IS_DEPLOYED="true"
+        fi
+        
+        echo "SERVICE_IS_DEPLOYED=$SERVICE_IS_DEPLOYED" >> $GITHUB_ENV

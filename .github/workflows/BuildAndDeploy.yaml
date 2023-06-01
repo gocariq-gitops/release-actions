@@ -71,15 +71,13 @@ on:
         required: true
       GHA_DEVOPS_DISPATCH:
         required: true
-      K8S_POD_DEPLOY_VALIDATION:
-        required: true
       GHA_DISPATCH_TEST:
         required: true
       GCP_SA_PROJECT_ACCESSOR:
         required: false
-
-env:
-  RELEASE_ACTIONS_VERSION: v-2
+      # TODO - remove after all apps will remove this parameter
+      K8S_POD_DEPLOY_VALIDATION:
+        required: false
 
 jobs:
   detect_env:
@@ -236,18 +234,10 @@ jobs:
           appName: ${{ inputs.app-name }}
           deployEnv: ${{ env.DEPLOY_ENV }}
 
-      - name: Validate deployment on ${{ env.DEPLOY_ENV }}
-        id: validate-git-tag-deployment
-        uses: gocariq-gitops/release-actions/bashValidateDeployment@v2
-        with:
-          google_credentials: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
-          app_name: ${{ inputs.app-name }}
-          google_project_id: ${{ inputs.project-id }}
-          expected_git_tag: ${{ env.CURRENT_IMAGE_TAG }}
-          env_name: ${{ env.DEPLOY_ENV }}
-          max_attempt: 30
-          sleep_time: 10
+      # TODO: implement this feature without kubectl
+      # - name: Validate deployment on ${{ env.DEPLOY_ENV }}
 
+      # TODO: implement tests check
       # - name: Trigger Test Suites
       #   if: ${{ env.IMAGE_EXIST == 'false' }}
       #   id: smoke-test

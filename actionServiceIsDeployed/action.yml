@@ -14,6 +14,10 @@ inputs:
   token:
     description: "GitHub token for git clone environments repository"
     required: true
+  on_not_deployed_stop:
+    description: "GitHub token for git clone environments repository"
+    default: 'false'
+    required: false
 
 runs:
   using: "composite"
@@ -38,3 +42,7 @@ runs:
         fi
         
         echo "SERVICE_IS_DEPLOYED=$SERVICE_IS_DEPLOYED" >> $GITHUB_ENV
+
+        if [[ "${SERVICE_IS_DEPLOYED}" == "false" && "${{ inputs.on_not_deployed_stop }}" == 'true' ]]; then
+          exit 1
+        fi

@@ -89,6 +89,7 @@ jobs:
           app_name: ${{ inputs.app_name }}
           env_name: int
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          on_not_deployed_stop: "true"
 
   check-stage-deployment:
     needs:
@@ -103,6 +104,7 @@ jobs:
           app_name: ${{ inputs.app_name }}
           env_name: stage
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          on_not_deployed_stop: "true"
 
   prepare-prod-image:
     runs-on: ubuntu-22.04

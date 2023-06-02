@@ -45,7 +45,7 @@ jobs:
 
       - name: Checking the availability of the image
         id: ImageCheck
-        uses: gocariq-gitops/release-actions/checkDockerImage@v2
+        uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
         with:
           google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
           google_project_id: ${{ inputs.project_id }}
@@ -83,7 +83,7 @@ jobs:
     steps:
       - name: Validate INT environment
         id: Validate_INT_Environment
-        uses: gocariq-gitops/release-actions/serviceIsDeployed@v2
+        uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2
         with:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}
@@ -97,7 +97,7 @@ jobs:
     steps:
       - name: Validate STAGE environment
         id: Validate_STAGE_Environment
-        uses: gocariq-gitops/release-actions/serviceIsDeployed@v2
+        uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2
         with:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}

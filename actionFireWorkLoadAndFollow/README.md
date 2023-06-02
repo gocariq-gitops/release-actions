@@ -13,7 +13,7 @@
 
 ## Usages
 ```yaml
-        uses: gocariq-gitops/release-actions/fireWorkLoadAndFollow@main
+        uses: gocariq-gitops/release-actions/actionFireWorkLoadAndFollow@main
         with:
           authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
           targetEnv: ${{ steps.branch-name.outputs.current_branch }}

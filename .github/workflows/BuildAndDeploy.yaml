@@ -4,26 +4,26 @@ permissions: write-all
 on:
   workflow_call:
     inputs:
-      project-id:
+      project_id:
         default: 'gocariq-platform'
         type: string
-      app-name:
+      app_name:
         required: true
         type: string
-      slack-channel:
+      slack_channel:
         default: '#release'
         type: string
-      deploy-env:
+      deploy_env:
         type: string
         required: false
-      deploy-env-on-push:
+      deploy_env_on_push:
         default: 'dev'
         type: string
         required: false
-      registry-name:
+      registry_name:
         default: 'cariq'
         type: string
-      image-tag:
+      image_tag:
         default: '0.1.0'
         type: string
       sonar:
@@ -38,18 +38,18 @@ on:
       build_script_path:
         default: build.sh
         type: string
-      java-version:
+      java_version:
         default: 11
         type: string
-      generate-gcp-general-secret:
+      generate_gcp_general_secret:
         default: "false"
         type: string
         description: "Generate gcp-general.json file to be able to build some applications"
-      generate-gcp-pypi-secret:
+      generate_gcp_pypi_secret:
         default: "false"
         type: string
         description: "Generate gcp-pypi.json file to be able to build some applications"
-      docker-build-kit:
+      docker_build_kit:
         default: '0'
         type: string
       docker_params:
@@ -88,10 +88,10 @@ jobs:
         shell: bash
         run: |
           set -x
-          if [[ -z "${{ inputs.deploy-env }}" ]]; then
-            DEPLOY_ENV=${{ inputs.deploy-env-on-push }}
+          if [[ -z "${{ inputs.deploy_env }}" ]]; then
+            DEPLOY_ENV=${{ inputs.deploy_env_on_push }}
           else
-            DEPLOY_ENV="${{ inputs.deploy-env }}"
+            DEPLOY_ENV="${{ inputs.deploy_env }}"
           fi
           
           # Cancel on an attempt to deploy to a non-testing environment
@@ -116,7 +116,7 @@ jobs:
       - uses: act10ns/slack@v2.0.0
         with:
           status: starting
-          channel: ${{ inputs.slack-channel }}
+          channel: ${{ inputs.slack_channel }}
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - uses: actions/checkout@v3
@@ -126,9 +126,9 @@ jobs:
         uses: gocariq-gitops/release-actions/checkDockerImage@v2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
-          google_project_id: ${{ inputs.project-id }}
-          docker_repo_name:  ${{ inputs.registry-name }}
-          docker_image_name: ${{ inputs.app-name }}
+          google_project_id: ${{ inputs.project_id }}
+          docker_repo_name:  ${{ inputs.registry_name }}
+          docker_image_name: ${{ inputs.app_name }}
 
       - name: Dockerfile lint
         if: ${{ env.IMAGE_EXIST == 'false' }}
@@ -142,7 +142,7 @@ jobs:
         id: validate-chart
         shell: bash
         run: |
-          helm lint ./charts/${{ inputs.app-name }}/
+          helm lint ./charts/${{ inputs.app_name }}/
 
       - name: Check if it is Java
         if: ${{ env.IMAGE_EXIST == 'false' }}
@@ -156,7 +156,7 @@ jobs:
         id: setting-env
         uses: actions/setup-java@v2
         with:
-          java-version: ${{ inputs.java-version }}
+          java-version: ${{ inputs.java_version }}
           distribution: 'adopt'
 
       - name: Check if it is GoLang
@@ -196,34 +196,34 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ inputs.sonar }}
 
-      - name: Docker Build & Push ${{ inputs.app-name }}
+      - name: Docker Build & Push ${{ inputs.app_name }}
         id: dockerize-push
         if: ${{ env.IMAGE_EXIST == 'false' }}
         uses: gocariq-gitops/release-actions/dockerBuildNPush@v2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
-          google_project_id: ${{ inputs.project-id }}
-          docker_repo_name: ${{ inputs.registry-name }}
+          google_project_id: ${{ inputs.project_id }}
+          docker_repo_name: ${{ inputs.registry_name }}
           docker_file_path: ${{ inputs.docker_file_path }}
-          docker_image_name: ${{ inputs.app-name }}
+          docker_image_name: ${{ inputs.app_name }}
           docker_params: ${{ inputs.docker_params }}
           docker_params_token_on_build: ${{ inputs.docker_params_token_on_build }}
-          docker_build_kit: ${{ inputs.docker-build-kit }}
-          generate-gcp-pypi-secret: ${{ inputs.generate-gcp-pypi-secret }}
-          generate-gcp-general-secret: ${{ inputs.generate-gcp-general-secret }}
-          gcp-sa-project-accessor: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
-          gha-devops-dispatch-token: ${{secrets.GHA_DEVOPS_DISPATCH}}
+          docker_build_kit: ${{ inputs.docker_build_kit }}
+          generate_gcp_pypi_secret: ${{ inputs.generate_gcp_pypi_secret }}
+          generate_gcp_general_secret: ${{ inputs.generate_gcp_general_secret }}
+          gcp_sa_project_accessor: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
+          gha_devops_dispatch_token: ${{secrets.GHA_DEVOPS_DISPATCH}}
 
       - name: Helm package and push
         id: helm-package-push
         uses: gocariq-gitops/release-actions/k8sHelm@v2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
-          image_tag: ${{ inputs.image-tag }}
-          registry_name: ${{ inputs.registry-name }}
-          project_id: ${{ inputs.project-id }}
+          image_tag: ${{ inputs.image_tag }}
+          registry_name: ${{ inputs.registry_name }}
+          project_id: ${{ inputs.project_id }}
           gke_google_credentials: ${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}
-          chart_name: ${{ inputs.app-name }}
+          chart_name: ${{ inputs.app_name }}
 
       - name: GitOps update helm tag in environment repo (deploy to ${{ env.DEPLOY_ENV }})
         id: update-tag-version
@@ -231,7 +231,7 @@ jobs:
         with:
           tag: ${{ env.CURRENT_IMAGE_TAG }}
           authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
-          appName: ${{ inputs.app-name }}
+          appName: ${{ inputs.app_name }}
           deployEnv: ${{ env.DEPLOY_ENV }}
 
       # TODO: implement this feature without kubectl
@@ -252,6 +252,6 @@ jobs:
         with:
           status: ${{ job.status }}
           steps: ${{ toJson(steps) }}
-          channel: ${{ inputs.slack-channel }}
+          channel: ${{ inputs.slack_channel }}
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
         if: always()

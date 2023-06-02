@@ -26,17 +26,17 @@ inputs:
   docker_build_kit:
     default: "1"
     description: "Build kit some images are not building with 1"
-  generate-gcp-general-secret:
+  generate_gcp_general_secret:
     default: "false"
     description: "Generate gcp-general.json file to be able to build some applications"
-  generate-gcp-pypi-secret:
+  generate_gcp_pypi_secret:
     default: "false"
     description: "Generate gcp-pypi.json file to be able to build some applications"
-  gcp-sa-project-accessor:
+  gcp_sa_project_accessor:
     default: ""
     description: "GCP_SA_PROJECT_ACCESSOR secret for gcp-pypi.json generation to able to build some applications"
     required: false
-  gha-devops-dispatch-token:
+  gha_devops_dispatch_token:
     default: ""
     description: "GitHub actions DevOps dispatch token"
     required: false
@@ -47,7 +47,7 @@ runs:
 
       # TODO - All applications should be updated to read GCP credentials from environment variable
       - name: Save credentials for build steps for python packages
-        if: ${{ inputs.generate-gcp-pypi-secret == 'true' }}
+        if: ${{ inputs.generate_gcp_pypi_secret == 'true' }}
         shell: bash
         env:
           GCP_SA_GHA_IMAGEPUSH: ${{ inputs.google_credentials }}
@@ -55,13 +55,13 @@ runs:
           echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp-pypi.json
 
       - name: Setup secrets for build steps for some images
-        if: ${{ inputs.generate-gcp-general-secret == 'true' }}
+        if: ${{ inputs.generate_gcp_general_secret == 'true' }}
         uses: google-github-actions/setup-gcloud@v0.2.0
         with:
           project_id: ${{env.PROJECT_ID}}
-          service_account_key: ${{ inputs.gcp-sa-project-accessor }}
+          service_account_key: ${{ inputs.gcp_sa_project_accessor }}
       - name: Save credentials for build steps for some images
-        if: ${{ inputs.generate-gcp-general-secret == 'true' }}
+        if: ${{ inputs.generate_gcp_general_secret == 'true' }}
         shell: bash
         env:
           GCP_SA_GHA_IMAGEPUSH: ${{inputs.google_credentials}}
@@ -118,7 +118,7 @@ runs:
           
           cd ${{inputs.docker_file_path}}
           if [[ "${{ inputs.docker_params_token_on_build }}" == "true" ]]; then
-            DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build --build-arg token=${{inputs.gha-devops-dispatch-token}} ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
+            DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build --build-arg token=${{inputs.gha_devops_dispatch_token}} ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
           else
             DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
           fi

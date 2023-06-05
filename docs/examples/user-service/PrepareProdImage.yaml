@@ -10,7 +10,7 @@ jobs:
   PrepareProdImage:
     uses: gocariq-gitops/release-actions/.github/workflows/PrepareProdImage.yaml@v2
     with:
-      app-name: "${{ github.event.repository.name }}"
+      app_name: "${{ github.event.repository.name }}"
     secrets:
-      GCP_SA_GHA_IMAGEPUSH: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
-      K8S_POD_DEPLOY_VALIDATION: ${{ secrets.K8S_POD_DEPLOY_VALIDATION }}
+      GCP_SA_GHA_IMAGEPUSH: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
+      GHA_DEVOPS_DISPATCH: ${{ secrets.GHA_DEVOPS_DISPATCH }}

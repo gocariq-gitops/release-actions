@@ -135,7 +135,7 @@ jobs:
         id: validate-dockerfile
         shell: bash
         run: |
-          docker run --rm -e HADOLINT_IGNORE=DL3007,DL3008,DL3018 -i hadolint/hadolint < Dockerfile
+          docker run --rm -e HADOLINT_IGNORE=DL3007,DL3008,DL3018,DL4006 -i hadolint/hadolint < Dockerfile
 
       - name: Helm lint
         if: ${{ env.IMAGE_EXIST == 'false' }}

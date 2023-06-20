@@ -30,7 +30,7 @@ jobs:
           echo "soure branch - ${{ github.base_ref }}"
 
       - name: Check if pull request is from dev branch
-        id: PR Validation
+        id: PR_Validation
         if: ${{ github.base_ref != 'dev'}}
         shell: bash
         run: |

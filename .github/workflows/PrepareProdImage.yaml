@@ -89,6 +89,7 @@ jobs:
 
   # it should run on pull_request to main only
   check-int-deployment:
+    if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
     needs:
       - check-image
     runs-on: ubuntu-22.04
@@ -105,7 +106,7 @@ jobs:
 
   # it should run on pull_request to main only
   check-stage-deployment:
-    if: ${{ github.event_name == 'pull_request' }}
+    if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
     needs:
       - check-image
     runs-on: ubuntu-22.04
@@ -125,7 +126,6 @@ jobs:
   # it should run on merge to main only
   prepare-prod-image:
     runs-on: ubuntu-22.04
-#    if: ${{ github.event_name == 'pull_request' }}
     if: ${{ github.event_name == 'push' && github.base_ref == 'main' }}
     needs:
       - check-image

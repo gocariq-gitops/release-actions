@@ -29,6 +29,13 @@ jobs:
         run: |
           echo "soure branch - ${{ github.base_ref }}"
 
+      - name: Check if pull request is from dev branch
+        id: PR Validation
+        if: ${{ github.base_ref != "dev"}}
+        shell: bash
+        run: |
+            echo "Pull request was not created from the dev branch. Failing the pipeline..."
+
       - name: Check out repository
         id: CheckOut
         uses: actions/checkout@master

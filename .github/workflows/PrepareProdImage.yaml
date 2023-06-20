@@ -23,19 +23,21 @@ jobs:
   check-image:
     runs-on: ubuntu-22.04
     #if: ${{ github.base_ref == 'main' }}
+    # The base_ref or target branch of the pull request in a workflow run.
+    # This property is only available when the event that triggers a workflow run is either pull_request or pull_request_target
     steps:
       - name: Print Git source branch name
         shell: bash
         run: |
-          echo "target branch - ${{ github.base_ref }}"
-          echo "soure branch  - ${{ github.head_ref }}"
+          echo "Target branch - ${{ github.base_ref }}"
+          echo "Source branch  - ${{ github.head_ref }}"
 
-      - name: Check if pull request is from dev branch
+      - name: Pull request Validation
         id: PR_Validation
-        if: ${{ github.base_ref != 'dev'}}
+        if: ${{ github.head_ref != 'dev' && github.base_ref == 'main' && github.event_name == 'pull_request' }}
         shell: bash
         run: |
-            echo "Pull request was not created from the dev branch. Failing the pipeline..."
+            echo "Pull request to the Main branch was not created from the dev branch. Failing the pipeline..."
             exit 1
 
       - name: Check out repository

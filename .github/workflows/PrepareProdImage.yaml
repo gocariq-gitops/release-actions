@@ -33,13 +33,13 @@ jobs:
           echo "Source branch - ${{ github.head_ref }}"
           echo "Event name    - ${{ github.event_name }}"
 
-      # - name: Pull request Validation
-      #   id: PR_Validation
-      #   if: ${{ github.head_ref != 'dev' && github.base_ref == 'main' && github.event_name == 'pull_request' }}
-      #   shell: bash
-      #   run: |
-      #       echo "Pull request to the Main branch was not created from the dev branch. Failing the pipeline..."
-      #       exit 1
+      - name: Pull request Validation
+        id: PR_Validation
+        if: ${{ github.head_ref != 'dev' && github.base_ref == 'main' && github.event_name == 'pull_request' }}
+        shell: bash
+        run: |
+            echo "Pull request to the Main branch was not created from the dev branch. Failing the pipeline..."
+            exit 1
 
       - name: Check out repository
         id: CheckOut

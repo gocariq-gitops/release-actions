@@ -27,7 +27,8 @@ jobs:
       - name: Print Git source branch name
         shell: bash
         run: |
-          echo "soure branch - ${{ github.base_ref }}"
+          echo "target branch - ${{ github.base_ref }}"
+          echo "soure branch  - ${{ github.head_ref }}"
 
       - name: Check if pull request is from dev branch
         id: PR_Validation

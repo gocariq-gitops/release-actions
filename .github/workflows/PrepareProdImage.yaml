@@ -119,12 +119,10 @@ jobs:
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           on_not_deployed_stop: "true"
 
-  # run on merge to main only
+  # run on merge to main only # ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
   prepare-prod-image:
     runs-on: ubuntu-22.04
-    if: |
-      #${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-      ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
 
     needs:
       - check-image

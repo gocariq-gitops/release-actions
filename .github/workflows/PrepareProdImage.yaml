@@ -125,7 +125,7 @@ jobs:
   # it should run on merge to main only
   prepare-prod-image:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' && github.base_ref == 'main' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs:
       - check-image
       - check-int-deployment

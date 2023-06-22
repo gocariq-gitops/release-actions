@@ -22,7 +22,6 @@ on:
 jobs:
   check-image:
     runs-on: ubuntu-22.04
-    #if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - name: Print Git source branch name
         shell: bash
@@ -55,7 +54,7 @@ jobs:
 
       - name: Checking the availability of the image
         id: ImageCheck
-        uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2-test
+        uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
         with:
           google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
           google_project_id: ${{ inputs.project_id }}
@@ -86,7 +85,7 @@ jobs:
       IMAGE_PATH: "${{ steps.export_env_vars.outputs.IMAGE_PATH }}"
       CURRENT_IMAGE: "${{ steps.export_env_vars.outputs.CURRENT_IMAGE }}"
 
-  # it should run on pull_request to main only
+  # run on pull_request to main only
   check-int-deployment:
     if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
     needs:
@@ -95,7 +94,7 @@ jobs:
     steps:
       - name: Validate INT environment
         id: Validate_INT_Environment
-        uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2-test
+        uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2
         with:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}
@@ -103,7 +102,7 @@ jobs:
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           on_not_deployed_stop: "true"
 
-  # it should run on pull_request to main only
+  # run on pull_request to main only
   check-stage-deployment:
     if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
     needs:
@@ -112,7 +111,7 @@ jobs:
     steps:
       - name: Validate STAGE environment
         id: Validate_STAGE_Environment
-        uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2-test
+        uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2
         with:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}
@@ -120,16 +119,15 @@ jobs:
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           on_not_deployed_stop: "true"
 
-
-
-  # it should run on merge to main only
+  # run on merge to main only
   prepare-prod-image:
     runs-on: ubuntu-22.04
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: |
+      #${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+      ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+
     needs:
       - check-image
-      # - check-int-deployment
-      # - check-stage-deployment
     steps:
       - name: Check out repository
         id: CheckOut

@@ -22,7 +22,7 @@ on:
 jobs:
   check-image:
     runs-on: ubuntu-22.04
-    if: ${{ github.base_ref == 'main' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - name: Print Git source branch name
         shell: bash

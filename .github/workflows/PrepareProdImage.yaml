@@ -66,17 +66,19 @@ jobs:
         id: workflow_runs
         shell: bash
         run: |
-          gh run list -L 5 --workflow BuildAndDeploy.yaml | grep completed # in_progress
+          #gh run list -L 5 --workflow BuildAndDeploy.yaml | grep completed # in_progress
 
-          # while true; do
-          # status=$(command_to_get_app_status)  # Replace with the command to retrieve the app status
-          # if [ "$status" == "in_progress" ]; then
-          #   echo "Status: $status. Rechecking in 10 seconds..."
-          #   sleep 10
-          # else
-          #   echo "Status: $status. Done."
-          #   break
-          # fi
+          while true; do
+            output=$(gh run list -L 5 --workflow BuildAndDeploy.yaml)
+
+            if echo "$output" | grep -q "in_progress"; then
+              echo "Status of BuildAndDeploy.yaml pipeline is running. Rechecking in 10 seconds..."
+              sleep 10
+            else
+              echo "Status: not running. Done."
+              break
+            fi
+          done
 
         env:
           GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}

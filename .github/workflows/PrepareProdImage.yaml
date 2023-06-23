@@ -66,9 +66,9 @@ jobs:
         id: workflow_runs
         shell: bash
         run: |
-          gh run list --workflow BuildAndDeploy.yaml
-          #gh run watch
-          gh run view
+          gh run list -L 5 #--workflow BuildAndDeploy.yaml
+
+          gh run watch && notify-send "run is done!"
         env:
           GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}
 

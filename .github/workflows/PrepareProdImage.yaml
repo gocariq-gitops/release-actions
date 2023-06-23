@@ -38,6 +38,14 @@ jobs:
             echo "Pull request to the Main branch was not created from the dev branch. Failing the pipeline..."
             exit 1
 
+      - name: Workflow dispatch Validation
+        id: WD_Validation
+        if: ${{ github.head_ref != 'main' && github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+            echo "You can RUN the pipeline only from the main branch. Failing the pipeline..."
+            exit 1
+
       - name: Check out repository
         id: CheckOut
         uses: actions/checkout@master
@@ -119,7 +127,7 @@ jobs:
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           on_not_deployed_stop: "true"
 
-  # run on merge to main only # ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+  # run on merge to main only
   prepare-prod-image:
     runs-on: ubuntu-22.04
     if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}

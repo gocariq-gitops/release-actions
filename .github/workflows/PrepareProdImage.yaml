@@ -62,7 +62,11 @@ jobs:
       #     status=$(echo "$response" | jq -r '.status')
       #     echo "Status of workflow run: $status"
 
-      - run: gh run list | grep "Build And Deploy (to test Envs) - CICDv2"
+      - name: Check workflow runs
+        id: workflow_runs
+        shell: bash
+        run: |
+          gh run list --workflow BuildAndDeploy.yaml
         env:
           GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}
 

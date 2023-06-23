@@ -67,6 +67,7 @@ jobs:
         shell: bash
         run: |
           gh run list --workflow BuildAndDeploy.yaml
+          gh run watch
         env:
           GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}
 

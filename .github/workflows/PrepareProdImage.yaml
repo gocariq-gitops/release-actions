@@ -62,7 +62,7 @@ jobs:
       #     status=$(echo "$response" | jq -r '.status')
       #     echo "Status of workflow run: $status"
 
-      - run: gh run list --json status, workflowName
+      - run: gh run list
         env:
           GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}
 

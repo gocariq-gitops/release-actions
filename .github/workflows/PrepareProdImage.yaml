@@ -23,13 +23,6 @@ jobs:
   check-image:
     runs-on: ubuntu-22.04
     steps:
-      - name: Print Git source branch name
-        shell: bash
-        run: |
-          echo "Target branch - ${{ github.base_ref }}"
-          echo "Source branch - ${{ github.head_ref }}"
-          echo "Event name    - ${{ github.event_name }}"
-
       - name: Pull request Validation
         id: PR_Validation
         if: ${{ github.head_ref != 'dev' && github.base_ref == 'main' && github.event_name == 'pull_request' }}
@@ -111,7 +104,6 @@ jobs:
         shell: bash
         run: |
           set -x
-          
           echo "IMAGE_PATH=${{ env.IMAGE_PATH }}" >> $GITHUB_OUTPUT
           echo "CURRENT_IMAGE=${{ env.CURRENT_IMAGE }}" >> $GITHUB_OUTPUT
           echo "GIT_SOURCE_BRANCH_SHA=${{ env.GIT_SOURCE_BRANCH_SHA }}" >> $GITHUB_OUTPUT

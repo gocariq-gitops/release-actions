@@ -66,8 +66,8 @@ jobs:
         id: workflow_runs
         shell: bash
         run: |
-          gh run list -L 5 --json='workflowName,status' #--jq='.status' #--workflow BuildAndDeploy.yaml # in_progress
-          gh run list -L 5 --json='workflowName,status' --jq='.status'
+          gh run list -L 5 --workflow BuildAndDeploy.yaml # in_progress
+
         env:
           GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}
 

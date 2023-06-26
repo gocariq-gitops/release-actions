@@ -45,16 +45,6 @@ jobs:
         with:
           fetch-depth: 2
 
-      # - name: Check status of second workflow run
-      #   env:
-      #     PAT_TOKEN: ${{ secrets.GHA_DEVOPS_DISPATCH }}
-      #   run: |
-      #     response=$(curl -s -H "Authorization: Bearer $PAT_TOKEN" \
-      #       "https://api.github.com/repos/gocariq/${{ inputs.app_name }}/actions/runs")
-      #     echo "$response"
-      #     status=$(echo "$response" | jq -r '.status')
-      #     echo "Status of workflow run: $status"
-
       - name: Check workflow runs
         id: workflow_runs
         env:
@@ -62,11 +52,12 @@ jobs:
         shell: bash
         run: |
           sleep 5
-          while true; do
+          for number in {1..10}
+          do
             output=$(gh run list -L 5 --workflow BuildAndDeploy.yaml)
             if echo "$output" | grep -q "in_progress"; then
-              echo "Status of BuildAndDeploy.yaml pipeline is running. Rechecking in 10 seconds..."
-              sleep 10
+              echo "Status of BuildAndDeploy.yaml pipeline is running. Rechecking in 1 min..."
+              sleep 60
             else
               echo "Status: not running. Done."
               break

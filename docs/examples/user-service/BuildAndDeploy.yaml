@@ -4,9 +4,7 @@ permissions: write-all
 on:
   push:
     branches:
-      - dev
       - feature/**
-      - bugfix/**
   workflow_dispatch:
     inputs:
       deploy_env:

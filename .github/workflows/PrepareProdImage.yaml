@@ -22,18 +22,47 @@ on:
 jobs:
   check-image:
     runs-on: ubuntu-22.04
-    if: ${{ github.base_ref == 'main' }}
     steps:
-      - name: Print Git source branch name
+      - name: Pull request Validation
+        id: PR_Validation
+        if: ${{ github.head_ref != 'dev' && github.base_ref == 'main' && github.event_name == 'pull_request' }}
         shell: bash
         run: |
-          echo "soure branch - ${{ github.base_ref }}"
+            echo "Pull request to the Main branch was not created from the dev branch. Failing the pipeline..."
+            exit 1
+
+      - name: Workflow dispatch Validation
+        id: WD_Validation
+        if: ${{ github.ref != 'refs/heads/main' && github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+            echo "You can RUN the pipeline only from the main branch. Failing the pipeline..."
+            exit 1
 
       - name: Check out repository
         id: CheckOut
         uses: actions/checkout@master
         with:
           fetch-depth: 2
+
+      - name: Check workflow runs
+        id: workflow_runs
+        env:
+          GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}
+        shell: bash
+        run: |
+          sleep 5
+          for number in {1..20}
+          do
+            output=$(gh run list -L 5 --workflow BuildAndDeploy.yaml)
+            if echo "$output" | grep -q "in_progress"; then
+              echo "Status of BuildAndDeploy.yaml pipeline is running. Rechecking in 1 min..."
+              sleep 60
+            else
+              echo "Status: not running. Done."
+              break
+            fi
+          done
 
       - name: Get Git source branch sha
         id: git_source_branch_sha
@@ -66,7 +95,6 @@ jobs:
         shell: bash
         run: |
           set -x
-          
           echo "IMAGE_PATH=${{ env.IMAGE_PATH }}" >> $GITHUB_OUTPUT
           echo "CURRENT_IMAGE=${{ env.CURRENT_IMAGE }}" >> $GITHUB_OUTPUT
           echo "GIT_SOURCE_BRANCH_SHA=${{ env.GIT_SOURCE_BRANCH_SHA }}" >> $GITHUB_OUTPUT
@@ -76,7 +104,9 @@ jobs:
       IMAGE_PATH: "${{ steps.export_env_vars.outputs.IMAGE_PATH }}"
       CURRENT_IMAGE: "${{ steps.export_env_vars.outputs.CURRENT_IMAGE }}"
 
+  # run on pull_request to main only
   check-int-deployment:
+    if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
     needs:
       - check-image
     runs-on: ubuntu-22.04
@@ -91,7 +121,9 @@ jobs:
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           on_not_deployed_stop: "true"
 
+  # run on pull_request to main only
   check-stage-deployment:
+    if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
     needs:
       - check-image
     runs-on: ubuntu-22.04
@@ -106,12 +138,13 @@ jobs:
           expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
           on_not_deployed_stop: "true"
 
+  # run on merge to main only
   prepare-prod-image:
     runs-on: ubuntu-22.04
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') }}
+
     needs:
       - check-image
-      - check-int-deployment
-      - check-stage-deployment
     steps:
       - name: Check out repository
         id: CheckOut

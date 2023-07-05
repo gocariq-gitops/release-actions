@@ -28,10 +28,10 @@ jobs:
     steps:
       - name: Pull request Validation
         id: PR_Validation
-        if: ${{ inputs.release_candidate_branch != "" && github.head_ref != inputs.release_candidate_branch && github.base_ref == 'main' && github.event_name == 'pull_request' }}
+        if: ${{ inputs.release_candidate_branch != '' && github.head_ref != inputs.release_candidate_branch && github.base_ref == 'main' && github.event_name == 'pull_request' }}
         shell: bash
         run: |
-            echo "Pull request to the Main branch was not created from the dev branch. Failing the pipeline..."
+            echo "Pull request to the Main branch was not created from the '${{ inputs.release_candidate_branch }}' branch. Failing the pipeline..."
             exit 1
 
       - name: Workflow dispatch Validation

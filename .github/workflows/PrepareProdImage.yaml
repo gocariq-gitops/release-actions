@@ -13,6 +13,9 @@ on:
       registry_name:
         default: 'cariq'
         type: string
+      release_candidate_branch:
+        default: 'release-candidate'
+        type: string
 
     secrets:
       GCP_SA_GHA_IMAGEPUSH:
@@ -25,7 +28,7 @@ jobs:
     steps:
       - name: Pull request Validation
         id: PR_Validation
-        if: ${{ github.head_ref != 'dev' && github.base_ref == 'main' && github.event_name == 'pull_request' }}
+        if: ${{ inputs.release_candidate_branch != "" && github.head_ref != inputs.release_candidate_branch && github.base_ref == 'main' && github.event_name == 'pull_request' }}
         shell: bash
         run: |
             echo "Pull request to the Main branch was not created from the dev branch. Failing the pipeline..."

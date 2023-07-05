@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - feature/**
+      - release/**
   workflow_dispatch:
     inputs:
       deploy_env:

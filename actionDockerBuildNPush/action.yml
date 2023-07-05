@@ -27,7 +27,7 @@ inputs:
     default: "1"
     description: "Build kit some images are not building with 1"
   generate_gcp_general_secret:
-    default: "false"
+    default: ""
     description: "Generate gcp-general.json file to be able to build some applications"
   generate_gcp_pypi_secret:
     default: "false"
@@ -51,32 +51,35 @@ runs:
         shell: bash
         env:
           GCP_SA_GHA_IMAGEPUSH: ${{ inputs.google_credentials }}
-        run: |          
+        run: |
           echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp-pypi.json
 
-      - name: Setup secrets for build steps for some images
-        if: ${{ inputs.generate_gcp_general_secret == 'true' }}
-        uses: google-github-actions/setup-gcloud@v0.2.0
+      - name: 'Authenticate to Google Cloud'
+        if: ${{ inputs.generate_gcp_general_secret != '' }}
+        id: GCPAuth2
+        uses: gocariq-gitops/release-actions/actionGCPAuth@v2
         with:
-          project_id: ${{env.PROJECT_ID}}
-          service_account_key: ${{ inputs.gcp_sa_project_accessor }}
+          google_credentials: ${{ inputs.gcp_sa_project_accessor }}
+          google_project_id: ${{ inputs.project_id }}
+
       - name: Save credentials for build steps for some images
-        if: ${{ inputs.generate_gcp_general_secret == 'true' }}
+        if: ${{ inputs.generate_gcp_general_secret != '' }}
         shell: bash
-        env:
-          GCP_SA_GHA_IMAGEPUSH: ${{inputs.google_credentials}}
         run: |
           gcloud secrets versions access latest \
-          --secret=k8s-pod-deploy-JSON_KEY  \
+          --secret=${{ inputs.generate_gcp_general_secret }} \
           --format='get(payload.data)' | tr '_-' '/+' | base64 -d > \
           gcp-general.json
+
+      - name: 'Authenticate to Google Cloud'
+        if: ${{ inputs.generate_gcp_general_secret != '' }}
+        id: GCPAuth
+        uses: gocariq-gitops/release-actions/actionGCPAuth@v2
+        with:
+          google_credentials: ${{ inputs.google_credentials }}
+          google_project_id: ${{ inputs.project_id }}
       # TODO - All applications should be updated to read GCP credentials from environment variable ^^^
 
-      - name: gcp auth
-        uses: google-github-actions/setup-gcloud@v0.2.0
-        with:
-          project_id: ${{inputs.google_project_id}}
-          service_account_key: ${{inputs.google_credentials}}
       - name: Docker Auth with gCloud CLI
         shell: bash
         run: |
@@ -85,10 +88,8 @@ runs:
       - name: Building docker containers
         shell: bash
         run: |
-          
-          
           set -x
-          
+
           # GITHUB_HEAD_REF is set only for PRs
           if [[ -n $GITHUB_HEAD_REF ]]; then
             GITHUB_SHA=${{github.event.pull_request.head.sha}}
@@ -113,9 +114,9 @@ runs:
           fi
 
           echo "Building docker image $IMAGE1 and $IMAGE2"
-          
+
           # Add build argument token if required
-          
+
           cd ${{inputs.docker_file_path}}
           if [[ "${{ inputs.docker_params_token_on_build }}" == "true" ]]; then
             DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build --build-arg token=${{inputs.gha_devops_dispatch_token}} ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .

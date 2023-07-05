@@ -46,13 +46,13 @@ jobs:
           fetch-depth: 2
 
       - name: Check workflow runs
-        id: workflow_runs
+        id: check_workflow_runs
         env:
           GITHUB_TOKEN: ${{secrets.GHA_DEVOPS_DISPATCH}}
         shell: bash
         run: |
           sleep 5
-          for number in {1..20}
+          for number in {1..10}
           do
             output=$(gh run list -L 5 --workflow BuildAndDeploy.yaml)
             if echo "$output" | grep -q "in_progress"; then
@@ -72,11 +72,17 @@ jobs:
           GIT_SOURCE_BRANCH_SHA=$(git log -n 1 |grep "Merge:\s*\d*\s*\d*" | awk "{print \$3}")
           echo "GIT_SOURCE_BRANCH_SHA=${GIT_SOURCE_BRANCH_SHA}" >> $GITHUB_ENV
 
+      - name: 'Authenticate to Google Cloud'
+        id: GCPAuth
+        uses: gocariq-gitops/release-actions/actionGCPAuth@v2
+        with:
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
+          google_project_id: ${{ inputs.project_id }}
+
       - name: Checking the availability of the image
         id: ImageCheck
         uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
         with:
-          google_credentials: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
           google_project_id: ${{ inputs.project_id }}
           docker_repo_name:  ${{ inputs.registry_name }}
           docker_image_name: ${{ inputs.app_name }}
@@ -152,12 +158,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: GCP Auth
-        id: GCP_Auth
-        uses: google-github-actions/setup-gcloud@v0.2.0
+      - name: 'Authenticate to Google Cloud'
+        id: GCPAuth
+        uses: gocariq-gitops/release-actions/actionGCPAuth@v2
         with:
-          project_id: ${{ inputs.project_id }}
-          service_account_key: ${{secrets.GCP_SA_GHA_IMAGEPUSH}}
+          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
+          google_project_id: ${{ inputs.project_id }}
 
       - name: Docker Auth
         id: Docker_Auth
@@ -180,7 +186,6 @@ jobs:
             echo "It seems you have re-run this job, git tag '${NEXT_VERSION}' already exists."
             echo "NOTE: This run doesn't bring any changes."
           fi
-          
           echo "NEXT_VERSION=$NEXT_VERSION" >> $GITHUB_ENV
 
       - name: Create PROD version of Image
@@ -191,7 +196,6 @@ jobs:
 
           CURRENT_IMAGE="${{ needs.check-image.outputs.CURRENT_IMAGE }}"
           IMAGE_PATH="${{ needs.check-image.outputs.IMAGE_PATH }}"
-          
           echo "Update microservice version '${CURRENT_IMAGE}' -> '${{ env.NEXT_VERSION }}'"
           NEW_IMAGE_PATH="${IMAGE_PATH}:${{ env.NEXT_VERSION }}"
           echo "new image - $NEW_IMAGE_PATH"

@@ -2,9 +2,6 @@ name: "Check Docker Image"
 description: "Check if docker image exists"
 
 inputs:
-  google_credentials:
-    description: "Google Credentials"
-    required: true
   google_project_id:
     description: "Google Project Id"
     required: true
@@ -18,8 +15,6 @@ inputs:
   docker_repo_name:
     description: "Docker Repo Name"
     required: true
-  docker_params:
-    description: "Docker build params"
   docker_registry:
     default: "us-docker.pkg.dev"
     description: "Docker registry path"
@@ -33,15 +28,12 @@ runs:
         echo "docker_repo_name - ${{inputs.docker_repo_name}}"
         echo "docker_image_name - ${{inputs.docker_image_name}}"
         echo "google_project_id - ${{inputs.google_project_id}}"
-    - name: gcp auth
-      uses: google-github-actions/setup-gcloud@v0.2.0
-      with:
-        project_id: ${{inputs.google_project_id}}
-        service_account_key: ${{inputs.google_credentials}}
+
     - name: Docker Auth with gCloud CLI
       shell: bash
       run: |
         gcloud auth configure-docker ${{ inputs.docker_registry }}
+
     - name: check docker image
       shell: bash
       run: |

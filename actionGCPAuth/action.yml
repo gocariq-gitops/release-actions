@@ -1,0 +1,23 @@
+name: "Authenticate to Google Cloud"
+description: "Authenticate to Google Cloud and set up Cloud SDK"
+
+inputs:
+  google_credentials:
+    description: "Google Credentials"
+    required: true
+  google_project_id:
+    description: "Google Project Id"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: 'Authenticate to Google Cloud'
+      uses: 'google-github-actions/auth@v1'
+      with:
+        credentials_json: ${{inputs.google_credentials}}
+        project_id: ${{inputs.google_project_id}}
+
+    - name: 'Set up Cloud SDK'
+      uses: 'google-github-actions/setup-gcloud@v1'

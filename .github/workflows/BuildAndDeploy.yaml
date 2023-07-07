@@ -42,7 +42,7 @@ on:
         default: 11
         type: string
       generate_gcp_general_secret:
-        default: "false"
+        default: ""
         type: string
         description: "Generate gcp-general.json file to be able to build some applications"
       generate_gcp_pypi_secret:
@@ -93,13 +93,13 @@ jobs:
           else
             DEPLOY_ENV="${{ inputs.deploy_env }}"
           fi
-          
+
           # Cancel on an attempt to deploy to a non-testing environment
           if [[ "${DEPLOY_ENV}" != "dev" && "${DEPLOY_ENV}" != "int"  && "${DEPLOY_ENV}" != "stage"  ]]; then
             echo "Deployment to PROD is not allowed, use 'release-manifest' for deployment to PROD."
             exit 1
           fi
-          
+
           echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_OUTPUT
     outputs:
       DEPLOY_ENV: ${{ steps.detect-environment.outputs.DEPLOY_ENV }}
@@ -110,7 +110,6 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       DEPLOY_ENV: ${{ needs.detect_env.outputs.DEPLOY_ENV }}
-
     steps:
 
       - uses: act10ns/slack@v2.0.0
@@ -121,11 +120,17 @@ jobs:
 
       - uses: actions/checkout@v3
 
-      - name: Image check
-        id: check-image
-        uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
+      - name: 'Authenticate to Google Cloud'
+        id: GCPAuth
+        uses: gocariq-gitops/release-actions/actionGCPAuth@v2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
+          google_project_id: ${{ inputs.project_id }}
+
+      - name: Checking the availability of the image
+        id: ImageCheck
+        uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
+        with:
           google_project_id: ${{ inputs.project_id }}
           docker_repo_name:  ${{ inputs.registry_name }}
           docker_image_name: ${{ inputs.app_name }}
@@ -218,11 +223,9 @@ jobs:
         id: helm-package-push
         uses: gocariq-gitops/release-actions/actionK8sHelm@v2
         with:
-          google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           image_tag: ${{ inputs.image_tag }}
           registry_name: ${{ inputs.registry_name }}
           project_id: ${{ inputs.project_id }}
-          gke_google_credentials: ${{ secrets.GKE_SA_GHA_PUSHER_CREDENTIALS }}
           chart_name: ${{ inputs.app_name }}
 
       - name: GitOps update helm tag in environment repo (deploy to ${{ env.DEPLOY_ENV }})

@@ -15,7 +15,7 @@ inputs:
     description: "GitHub token for git clone environments repository"
     required: true
   on_not_deployed_stop:
-    description: "GitHub token for git clone environments repository"
+    description: "If it TRUE - stop the pipeline"
     default: 'false'
     required: false
 

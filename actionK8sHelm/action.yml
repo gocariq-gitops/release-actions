@@ -2,8 +2,8 @@ name: "Helm package, push & install"
 description: "Helm package, push & install"
 
 inputs:
-  image_tag:
-    description: "Helm Image Tag"
+  helm_package_version:
+    description: "Helm Package Version"
     required: true
   helm_registry_name:
     description: "Helm Registry Name"
@@ -34,10 +34,10 @@ runs:
         run: |
           set -x
           helm dependency build ./charts/${{ inputs.chart_name }}/
-          helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.image_tag}}
+          helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.helm_package_version}}
       
       - name: helm push
         shell: bash
         run: |
           set -x
-          helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.helm_registry_name}}
+          helm push ${{inputs.chart_name}}-${{inputs.helm_package_version}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.helm_registry_name}}

@@ -8,8 +8,8 @@ inputs:
   helm_registry_name:
     description: "Helm Registry Name"
     required: true
-  registry_host_name:
-    description: "Registry host name"
+  registry_host:
+    description: "Registry host"
     required: false
     default: 'us-docker.pkg.dev'
   project_id:
@@ -27,7 +27,7 @@ runs:
         shell: bash
         run: |
           set -x
-          gcloud auth configure-docker ${{ inputs.registry_host_name }} --quiet
+          gcloud auth configure-docker ${{ inputs.registry_host }} --quiet
 
       - name: helm package
         shell: bash
@@ -40,4 +40,4 @@ runs:
         shell: bash
         run: |
           set -x
-          helm push ${{inputs.chart_name}}-${{inputs.helm_package_version}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.helm_registry_name}}
+          helm push ${{inputs.chart_name}}-${{inputs.helm_package_version}}.tgz oci://${{inputs.registry_host}}/${{inputs.project_id}}/${{inputs.helm_registry_name}}

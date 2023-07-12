@@ -16,7 +16,7 @@ inputs:
     default: "carig"
     description: "Docker Registry Name"
     required: true
-  docker_registry_host:
+  registry_host:
     default: "us-docker.pkg.dev"
     description: "Docker registry path"
 
@@ -33,12 +33,12 @@ runs:
     - name: Docker Auth with gCloud CLI
       shell: bash
       run: |
-        gcloud auth configure-docker ${{ inputs.docker_registry_host }}
+        gcloud auth configure-docker ${{ inputs.registry_host }}
 
     - name: check docker image
       shell: bash
       run: |
-        export REPO_URL=${{ inputs.docker_registry_host }}
+        export REPO_URL=${{ inputs.registry_host }}
         export PROJECT_ID=${{inputs.google_project_id}}
         export REPO_NAME=${{inputs.docker_registry_name}}
         export IMAGE_NAME=${{inputs.docker_image_name}}

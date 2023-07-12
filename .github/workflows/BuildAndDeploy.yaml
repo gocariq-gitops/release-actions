@@ -28,7 +28,8 @@ on:
         description: "Helm Registry Name"
         default: 'cariq'
         type: string
-      image_tag:
+      helm_package_version:
+        description: "Helm Package Version if it was not defined"
         default: '0.1.0'
         type: string
       sonar:
@@ -224,11 +225,11 @@ jobs:
           gcp_sa_project_accessor: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
           gha_devops_dispatch_token: ${{secrets.GHA_DEVOPS_DISPATCH}}
 
-      - name: Helm package and push
+      - name: Helm - build package and push
         id: helm-package-push
         uses: gocariq-gitops/release-actions/actionK8sHelm@v2
         with:
-          image_tag: ${{ inputs.image_tag }}
+          helm_package_version: ${{ inputs.helm_package_version }}
           helm_registry_name: ${{ inputs.helm_registry_name }}
           project_id: ${{ inputs.project_id }}
           chart_name: ${{ inputs.app_name }}

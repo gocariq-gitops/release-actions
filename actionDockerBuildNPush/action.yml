@@ -15,6 +15,7 @@ inputs:
     description: "Docker Image Name"
     required: true
   docker_registry_name:
+    default: "carig"
     description: "Docker Registry Name"
     required: true
   docker_params:

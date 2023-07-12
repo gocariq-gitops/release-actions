@@ -10,7 +10,8 @@ on:
       app_name:
         required: true
         type: string
-      registry_name:
+      docker_registry_name:
+        description: "Docker Registry Name"
         default: 'cariq'
         type: string
       release_candidate_branch:
@@ -87,7 +88,7 @@ jobs:
         uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
         with:
           google_project_id: ${{ inputs.project_id }}
-          docker_repo_name:  ${{ inputs.registry_name }}
+          docker_registry_name:  ${{ inputs.docker_registry_name }}
           docker_image_name: ${{ inputs.app_name }}
           docker_image_tag: ${{ env.GIT_SOURCE_BRANCH_SHA }}
 

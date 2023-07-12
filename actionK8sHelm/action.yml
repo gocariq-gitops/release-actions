@@ -5,8 +5,8 @@ inputs:
   image_tag:
     description: "Helm Image Tag"
     required: true
-  registry_name:
-    description: "Docker File Path"
+  helm_registry_name:
+    description: "Helm Registry Name"
     required: true
   registry_host_name:
     description: "Registry host name"
@@ -40,4 +40,4 @@ runs:
         shell: bash
         run: |
           set -x
-          helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.registry_name}}
+          helm push ${{inputs.chart_name}}-${{inputs.image_tag}}.tgz oci://${{inputs.registry_host_name}}/${{inputs.project_id}}/${{inputs.helm_registry_name}}

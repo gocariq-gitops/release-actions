@@ -12,8 +12,8 @@ inputs:
     description: "Docker Image Tag"
     required: false
     default: ""
-  docker_repo_name:
-    description: "Docker Repo Name"
+  docker_registry_name:
+    description: "Docker Registry Name"
     required: true
   docker_registry:
     default: "us-docker.pkg.dev"
@@ -25,7 +25,7 @@ runs:
     - name: Print inputs
       shell: bash
       run: |
-        echo "docker_repo_name - ${{inputs.docker_repo_name}}"
+        echo "docker_registry_name - ${{inputs.docker_registry_name}}"
         echo "docker_image_name - ${{inputs.docker_image_name}}"
         echo "google_project_id - ${{inputs.google_project_id}}"
 
@@ -39,7 +39,7 @@ runs:
       run: |
         export REPO_URL=${{ inputs.docker_registry }}
         export PROJECT_ID=${{inputs.google_project_id}}
-        export REPO_NAME=${{inputs.docker_repo_name}}
+        export REPO_NAME=${{inputs.docker_registry_name}}
         export IMAGE_NAME=${{inputs.docker_image_name}}
         if [[ -z "${{ inputs.docker_image_tag }}" ]]; then
           export IMAGE_TAG=$(git rev-parse --short HEAD)

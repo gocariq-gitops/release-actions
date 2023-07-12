@@ -14,8 +14,8 @@ inputs:
   docker_image_name:
     description: "Docker Image Name"
     required: true
-  docker_repo_name:
-    description: "Docker Repo Name"
+  docker_registry_name:
+    description: "Docker Registry Name"
     required: true
   docker_params:
     description: "Docker build params"
@@ -97,7 +97,7 @@ runs:
           echo "GITHUB_SHA=$GITHUB_SHA"
           export SHORT_SHA=${GITHUB_SHA:0:7}
           export REPO_URL="us-docker.pkg.dev"
-          export REPO_NAME=${{inputs.docker_repo_name}}
+          export REPO_NAME=${{inputs.docker_registry_name}}
           export IMAGE_NAME=${{inputs.docker_image_name}}
           export IMAGE_TAG=$SHORT_SHA
           export PROJECT_ID=${{inputs.google_project_id}}

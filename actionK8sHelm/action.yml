@@ -33,6 +33,11 @@ runs:
       shell: bash
       run: |
         set -x
+        
+        # Update application version
+        yq -i '.appVersion = "${{inputs.helm_package_version}}"' './charts/${{ inputs.chart_name }}/Chart.yaml'
+        
+        # Build helm chart
         helm dependency build ./charts/${{ inputs.chart_name }}/
         helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.helm_package_version}}
 

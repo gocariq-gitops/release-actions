@@ -25,6 +25,7 @@ payload = json.dumps({
         "appName": "{0}".format(appName),
         "deployEnv": "{0}".format(branch),
         "tag": "{0}".format(gitSha),
+        "appVersion": "{0}".format(gitSha),
     }
 })
 headers = {

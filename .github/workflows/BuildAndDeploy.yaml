@@ -26,7 +26,7 @@ on:
         type: string
       helm_registry_name:
         description: "Helm Registry Name"
-        default: 'cariq'
+        default: 'cariqcharts'
         type: string
       sonar:
         default: 'https://sonar.gocariq.com'

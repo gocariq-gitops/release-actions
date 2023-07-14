@@ -1,0 +1,38 @@
+name: "Detect current application version"
+description: "Detect current application version (git_tag or 0.0.1-git_sha)"
+
+inputs:
+  docker_image_tag:
+    description: "Docker Image Tag"
+    required: false
+    default: ""
+  version_null_prefix:
+    default: "0.0.0-"
+    description: "Null version prefix is used for not versioned builds with git sha, to make it SemVer 2 compatible and looks like 0.0.0-abcdef0"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Helm - detect version
+      id: helm-detect-version
+      shell: bash
+      run: |
+        set -x
+
+        if [[ ! -z "${{ inputs.docker_image_tag }}" ]]; then
+          IMAGE_TAG="${{ inputs.docker_image_tag }}"
+        elif [[ -n $GITHUB_HEAD_REF ]]; then
+          # GITHUB_HEAD_REF is set only for PRs
+          GITHUB_SHA=${{github.event.pull_request.head.sha}}
+        else
+          IMAGE_TAG=${GITHUB_SHA:0:7}
+        fi
+      
+        # Normalize version to SEMVER 2
+        SEMVER_VALIDATOR_REGEX="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
+        if [[ ! "${IMAGE_TAG}" =~ ${SEMVER_VALIDATOR_REGEX} ]]; then
+          IMAGE_TAG="${{inputs.version_null_prefix}}${IMAGE_TAG}"
+        fi
+        
+        # Export env variables
+        echo "CURRENT_APP_VERSION=$IMAGE_TAG" >> $GITHUB_ENV

@@ -8,6 +8,9 @@ inputs:
   google_project_id:
     description: "Google Project Id"
     required: true
+  registry_host:
+    default: "us-docker.pkg.dev"
+    description: "Docker registry path"
   docker_file_path:
     description: "Docker File Path"
     required: true
@@ -41,94 +44,86 @@ inputs:
     default: ""
     description: "GitHub actions DevOps dispatch token"
     required: false
+  version_null_prefix:
+    default: "0.0.0-"
+    description: "Null version prefix is used for not versioned builds with git sha, to make it SemVer 2 compatible and looks like 0.0.0-abcdef0"
+  docker_image_tag:
+    description: "Docker Image Tag"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
   steps:
 
-      # TODO - All applications should be updated to read GCP credentials from environment variable
-      - name: Save credentials for build steps for python packages
-        if: ${{ inputs.generate_gcp_pypi_secret == 'true' }}
-        shell: bash
-        env:
-          GCP_SA_GHA_IMAGEPUSH: ${{ inputs.google_credentials }}
-        run: |
-          echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp-pypi.json
+    # TODO - All applications should be updated to read GCP credentials from environment variable
+    - name: Save credentials for build steps for python packages
+      if: ${{ inputs.generate_gcp_pypi_secret == 'true' }}
+      shell: bash
+      env:
+        GCP_SA_GHA_IMAGEPUSH: ${{ inputs.google_credentials }}
+      run: |
+        echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp-pypi.json
 
-      - name: 'Authenticate to Google Cloud'
-        if: ${{ inputs.generate_gcp_general_secret != '' }}
-        id: GCPAuth2
-        uses: gocariq-gitops/release-actions/actionGCPAuth@v2
-        with:
-          google_credentials: ${{ inputs.gcp_sa_project_accessor }}
-          google_project_id: ${{ inputs.project_id }}
+    - name: 'Authenticate to Google Cloud'
+      if: ${{ inputs.generate_gcp_general_secret != '' }}
+      id: GCPAuth2
+      uses: gocariq-gitops/release-actions/actionGCPAuth@v2
+      with:
+        google_credentials: ${{ inputs.gcp_sa_project_accessor }}
+        google_project_id: ${{ inputs.project_id }}
 
-      - name: Save credentials for build steps for some images
-        if: ${{ inputs.generate_gcp_general_secret != '' }}
-        shell: bash
-        run: |
-          gcloud secrets versions access latest \
-          --secret=${{ inputs.generate_gcp_general_secret }} \
-          --format='get(payload.data)' | tr '_-' '/+' | base64 -d > \
-          gcp-general.json
+    - name: Save credentials for build steps for some images
+      if: ${{ inputs.generate_gcp_general_secret != '' }}
+      shell: bash
+      run: |
+        gcloud secrets versions access latest \
+        --secret=${{ inputs.generate_gcp_general_secret }} \
+        --format='get(payload.data)' | tr '_-' '/+' | base64 -d > \
+        gcp-general.json
 
-      - name: 'Authenticate to Google Cloud'
-        if: ${{ inputs.generate_gcp_general_secret != '' }}
-        id: GCPAuth
-        uses: gocariq-gitops/release-actions/actionGCPAuth@v2
-        with:
-          google_credentials: ${{ inputs.google_credentials }}
-          google_project_id: ${{ inputs.project_id }}
-      # TODO - All applications should be updated to read GCP credentials from environment variable ^^^
+    - name: 'Authenticate to Google Cloud'
+      if: ${{ inputs.generate_gcp_general_secret != '' }}
+      id: GCPAuth
+      uses: gocariq-gitops/release-actions/actionGCPAuth@v2
+      with:
+        google_credentials: ${{ inputs.google_credentials }}
+        google_project_id: ${{ inputs.project_id }}
+    # TODO - All applications should be updated to read GCP credentials from environment variable ^^^
 
-      - name: Docker Auth with gCloud CLI
-        shell: bash
-        run: |
-          gcloud auth configure-docker us-docker.pkg.dev
+    - name: Docker Auth with gCloud CLI
+      shell: bash
+      run: |
+        gcloud auth configure-docker ${{inputs.registry_host}}
 
-      - name: Building docker containers
-        shell: bash
-        run: |
-          set -x
-
-          # GITHUB_HEAD_REF is set only for PRs
-          if [[ -n $GITHUB_HEAD_REF ]]; then
-            GITHUB_SHA=${{github.event.pull_request.head.sha}}
-          fi
-          echo "GITHUB_SHA=$GITHUB_SHA"
-          export SHORT_SHA=${GITHUB_SHA:0:7}
-          export REPO_URL="us-docker.pkg.dev"
-          export REPO_NAME=${{inputs.docker_registry_name}}
-          export IMAGE_NAME=${{inputs.docker_image_name}}
-          export IMAGE_TAG=$SHORT_SHA
-          export PROJECT_ID=${{inputs.google_project_id}}
-
-          export IMAGE1="$IMAGE_NAME:$IMAGE_TAG"
-          export IMAGE2="$IMAGE_NAME:latest"
-          export IMAGE_FULL_PATH1="$REPO_URL/$PROJECT_ID/$REPO_NAME/${IMAGE1}"
-          export IMAGE_FULL_PATH2="$REPO_URL/$PROJECT_ID/$REPO_NAME/${IMAGE2}"
-
-          # Check image exist in the registry
-          if gcloud container images describe $IMAGE_FULL_PATH >/dev/null 2>&1; then
-            echo "Image already exists."
-            echo "DOCKER PUSH IS SKIPPED"
-          fi
-
-          echo "Building docker image $IMAGE1 and $IMAGE2"
-
-          # Add build argument token if required
-
-          cd ${{inputs.docker_file_path}}
-          if [[ "${{ inputs.docker_params_token_on_build }}" == "true" ]]; then
-            DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build --build-arg token=${{inputs.gha_devops_dispatch_token}} ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
-          else
-            DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build ${{inputs.docker_params}} -t "$IMAGE1" -t "$IMAGE2" .
-          fi
-          cd -
-
-          # Push image if it does not exist in the registry
-          echo "Push docker image"
-          docker tag $IMAGE1 $IMAGE_FULL_PATH1
-          docker tag $IMAGE2 $IMAGE_FULL_PATH2
-          docker push $IMAGE_FULL_PATH1
-          docker push $IMAGE_FULL_PATH2
+    - name: Building docker containers
+      shell: bash
+      run: |
+        set -x
+  
+        # Set variables                      
+        IMAGE_TAGGED_VER="${{inputs.docker_image_name}}:${{env.CURRENT_APP_VERSION}}"
+        IMAGE_LATEST="${{inputs.docker_image_name}}:latest"
+        IMAGE_FULL_PATH_TAGGED_VER="${{inputs.registry_host}}/${{inputs.google_project_id}}/${{inputs.docker_registry_name}}/${IMAGE_TAGGED_VER}"
+        IMAGE_FULL_PATH_LATEST="${{inputs.registry_host}}/${{inputs.google_project_id}}/${{inputs.docker_registry_name}}/${IMAGE_LATEST}"
+  
+        # Check image exist in the registry
+        if gcloud container images describe $IMAGE_FULL_PATH >/dev/null 2>&1; then
+          echo "Image already exists."
+          echo "DOCKER PUSH IS SKIPPED"
+        fi
+  
+        # Add build argument token if required
+        cd ${{inputs.docker_file_path}}
+        if [[ "${{ inputs.docker_params_token_on_build }}" == "true" ]]; then
+          DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build --build-arg token=${{inputs.gha_devops_dispatch_token}} ${{inputs.docker_params}} -t "$IMAGE_TAGGED_VER" -t "$IMAGE_LATEST" .
+        else
+          DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build ${{inputs.docker_params}} -t "$IMAGE_TAGGED_VER" -t "$IMAGE_LATEST" .
+        fi
+        cd -
+  
+        # Push image if it does not exist in the registry
+        docker tag $IMAGE_TAGGED_VER $IMAGE_FULL_PATH_TAGGED_VER
+        docker tag $IMAGE_LATEST $IMAGE_FULL_PATH_LATEST
+        docker push $IMAGE_FULL_PATH_TAGGED_VER
+        docker push $IMAGE_FULL_PATH_LATEST

@@ -28,10 +28,6 @@ on:
         description: "Helm Registry Name"
         default: 'cariq'
         type: string
-      helm_package_version:
-        description: "Helm Package Version if it was not defined"
-        default: '0.1.0'
-        type: string
       sonar:
         default: 'https://sonar.gocariq.com'
         type: string
@@ -133,6 +129,10 @@ jobs:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project_id }}
 
+      - name: Detect current application version
+        id: detect-current-app-version
+        uses: gocariq-gitops/release-actions/actionDetectCurrentAppVersion@v2
+
       - name: Checking the availability of the image
         id: ImageCheck
         uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
@@ -229,7 +229,7 @@ jobs:
         id: helm-package-push
         uses: gocariq-gitops/release-actions/actionK8sHelm@v2
         with:
-          helm_package_version: ${{ inputs.helm_package_version }}
+          helm_package_version: ${{ env.CURRENT_APP_VERSION }}
           helm_registry_name: ${{ inputs.helm_registry_name }}
           project_id: ${{ inputs.project_id }}
           chart_name: ${{ inputs.app_name }}
@@ -238,7 +238,7 @@ jobs:
         id: update-tag-version
         uses: gocariq-gitops/release-actions/actionHelmValuesUpdateWithWait@v2
         with:
-          tag: ${{ env.CURRENT_IMAGE_TAG }}
+          tag: ${{ env.CURRENT_APP_VERSION }}
           authToken: ${{secrets.GHA_DEVOPS_DISPATCH}}
           appName: ${{ inputs.app_name }}
           deployEnv: ${{ env.DEPLOY_ENV }}
@@ -254,7 +254,7 @@ jobs:
       #   with:
       #     authToken: ${{secrets.GHA_DISPATCH_TEST}}
       #     targetEnv: ${{ env.DEPLOY_ENV }}
-      #     tag: ${{ env.CURRENT_IMAGE_TAG }}
+      #     tag: ${{ env.CURRENT_APP_VERSION }}
       #     workFlowFileName: core-service-test
 
       - uses: act10ns/slack@v2.0.0

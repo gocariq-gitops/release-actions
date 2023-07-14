@@ -3,6 +3,7 @@ description: "Helm package, push & install"
 
 inputs:
   helm_package_version:
+    default: ""
     description: "Helm Package Version"
     required: true
   helm_registry_name:
@@ -22,22 +23,21 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: login to artifact registry
+      shell: bash
+      run: |
+        set -x
+        gcloud auth configure-docker ${{ inputs.registry_host }} --quiet
 
-      - name: login to artifact registry
-        shell: bash
-        run: |
-          set -x
-          gcloud auth configure-docker ${{ inputs.registry_host }} --quiet
+    - name: Helm - build package
+      shell: bash
+      run: |
+        set -x
+        helm dependency build ./charts/${{ inputs.chart_name }}/
+        helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.helm_package_version}}
 
-      - name: helm package
-        shell: bash
-        run: |
-          set -x
-          helm dependency build ./charts/${{ inputs.chart_name }}/
-          helm package ./charts/${{ inputs.chart_name }}/ --version ${{inputs.helm_package_version}}
-      
-      - name: helm push
-        shell: bash
-        run: |
-          set -x
-          helm push ${{inputs.chart_name}}-${{inputs.helm_package_version}}.tgz oci://${{inputs.registry_host}}/${{inputs.project_id}}/${{inputs.helm_registry_name}}
+    - name: Helm - push package
+      shell: bash
+      run: |
+        set -x
+        helm push ${{inputs.chart_name}}-${{inputs.helm_package_version}}.tgz oci://${{inputs.registry_host}}/${{inputs.project_id}}/${{inputs.helm_registry_name}}

@@ -211,7 +211,7 @@ jobs:
       - name: Docker Build & Push ${{ inputs.app_name }}
         id: dockerize-push
         if: ${{ env.IMAGE_EXIST == 'false' }}
-        uses: gocariq-gitops/release-actions/actionDockerBuildNPush@v2-netrc
+        uses: gocariq-gitops/release-actions/actionDockerBuildNPush@v2
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project_id }}

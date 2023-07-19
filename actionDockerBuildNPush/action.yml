@@ -30,7 +30,7 @@ inputs:
   docker_build_kit:
     default: "1"
     description: "Build kit some images are not building with 1"
-  generate_gcp_general_secret:
+  gcp_general_secret_name:
     default: ""
     description: "Generate gcp-general.json file to be able to build some applications"
   generate_gcp_pypi_secret:
@@ -63,27 +63,38 @@ runs:
       env:
         GCP_SA_GHA_IMAGEPUSH: ${{ inputs.google_credentials }}
       run: |
-        echo "$GCP_SA_GHA_IMAGEPUSH" >> gcp-pypi.json
+        echo "${GCP_SA_GHA_IMAGEPUSH}" >> gcp-pypi.json
 
-    - name: 'Authenticate to Google Cloud'
-      if: ${{ inputs.generate_gcp_general_secret != '' }}
-      id: GCPAuth2
-      uses: gocariq-gitops/release-actions/actionGCPAuth@v2
-      with:
-        google_credentials: ${{ inputs.gcp_sa_project_accessor }}
-        google_project_id: ${{ inputs.project_id }}
 
+
+    # TODO - do we really need second authentication here or probably we can use in the implemented way
+    #    - name: 'Authenticate to Google Cloud'
+    #      if: ${{ inputs.gcp_general_secret_name != '' }}
+    #      id: GCPAuth2
+    #      uses: gocariq-gitops/release-actions/actionGCPAuth@v2
+    #      with:
+    #        google_credentials: ${{ inputs.gcp_sa_project_accessor }}
+    #        google_project_id: ${{ inputs.project_id }}
+    #    - name: Save credentials for build steps for some images
+    #      if: ${{ inputs.gcp_general_secret_name != '' }}
+    #      shell: bash
+    #      run: |
+    #         gcloud secrets versions access latest \
+    #         --secret=${{ inputs.gcp_sa_project_accessor }} \
+    #         --format='get(payload.data)' | tr '_-' '/+' | base64 -d > \
+    #         gcp-general.json
     - name: Save credentials for build steps for some images
-      if: ${{ inputs.generate_gcp_general_secret != '' }}
+      if: ${{ inputs.gcp_general_secret_name != '' }}
       shell: bash
       run: |
-        gcloud secrets versions access latest \
-        --secret=${{ inputs.generate_gcp_general_secret }} \
-        --format='get(payload.data)' | tr '_-' '/+' | base64 -d > \
-        gcp-general.json
+        set -x
+        cp "${{ env.GOOGLE_GHA_CREDS_PATH }}" "${{ inputs.gcp_general_secret_name }}"
+    ### ^^^
+
+
 
     - name: 'Authenticate to Google Cloud'
-      if: ${{ inputs.generate_gcp_general_secret != '' }}
+      # if: ${{ inputs.gcp_general_secret_name != '' }} # TODO - it looks like an error
       id: GCPAuth
       uses: gocariq-gitops/release-actions/actionGCPAuth@v2
       with:
@@ -115,6 +126,7 @@ runs:
   
         # Add build argument token if required
         cd ${{inputs.docker_file_path}}
+        [[ -r ~/.netrc ]] && cp ~/.netrc ./.netrc
         if [[ "${{ inputs.docker_params_token_on_build }}" == "true" ]]; then
           DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build --build-arg token=${{inputs.gha_devops_dispatch_token}} ${{inputs.docker_params}} -t "$IMAGE_TAGGED_VER" -t "$IMAGE_LATEST" .
         else

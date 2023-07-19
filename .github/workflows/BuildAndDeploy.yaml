@@ -43,7 +43,7 @@ on:
       java_version:
         default: 11
         type: string
-      generate_gcp_general_secret:
+      gcp_general_secret_name:
         default: ""
         type: string
         description: "Generate gcp-general.json file to be able to build some applications"
@@ -126,6 +126,7 @@ jobs:
         id: GCPAuth
         uses: gocariq-gitops/release-actions/actionGCPAuth@v2
         with:
+          create_credentials_file: true
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project_id }}
 
@@ -210,7 +211,7 @@ jobs:
       - name: Docker Build & Push ${{ inputs.app_name }}
         id: dockerize-push
         if: ${{ env.IMAGE_EXIST == 'false' }}
-        uses: gocariq-gitops/release-actions/actionDockerBuildNPush@v2
+        uses: gocariq-gitops/release-actions/actionDockerBuildNPush@v2-netrc
         with:
           google_credentials: ${{ secrets.GCP_SA_GHA_IMAGEPUSH }}
           google_project_id: ${{ inputs.project_id }}
@@ -221,7 +222,7 @@ jobs:
           docker_params_token_on_build: ${{ inputs.docker_params_token_on_build }}
           docker_build_kit: ${{ inputs.docker_build_kit }}
           generate_gcp_pypi_secret: ${{ inputs.generate_gcp_pypi_secret }}
-          generate_gcp_general_secret: ${{ inputs.generate_gcp_general_secret }}
+          gcp_general_secret_name: ${{ inputs.gcp_general_secret_name }}
           gcp_sa_project_accessor: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
           gha_devops_dispatch_token: ${{secrets.GHA_DEVOPS_DISPATCH}}
 

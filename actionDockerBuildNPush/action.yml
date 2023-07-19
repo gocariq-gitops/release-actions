@@ -115,6 +115,7 @@ runs:
   
         # Add build argument token if required
         cd ${{inputs.docker_file_path}}
+        [[ -r ~/.netrc ]] && cp ~/.netrc ./.netrc
         if [[ "${{ inputs.docker_params_token_on_build }}" == "true" ]]; then
           DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build --build-arg token=${{inputs.gha_devops_dispatch_token}} ${{inputs.docker_params}} -t "$IMAGE_TAGGED_VER" -t "$IMAGE_LATEST" .
         else

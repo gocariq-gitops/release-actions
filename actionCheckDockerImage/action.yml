@@ -8,10 +8,6 @@ inputs:
   docker_image_name:
     description: "Docker Image Name"
     required: true
-  docker_image_tag:
-    description: "Docker Image Tag"
-    required: false
-    default: ""
   docker_registry_name:
     default: "carig"
     description: "Docker Registry Name"

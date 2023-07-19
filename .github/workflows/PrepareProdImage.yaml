@@ -68,13 +68,20 @@ jobs:
             fi
           done
 
-      - name: Get Git source branch sha
-        id: git_source_branch_sha
+      - name: Check if PR to main
+        if: ${{ github.event_name == 'pull_request' && github.base_ref == 'main' }}
+        id: git_pr_source_branch_sha
         shell: bash
         run: |
           set -x
-          GIT_SOURCE_BRANCH_SHA=$(git log -n 1 |grep "Merge:\s*\d*\s*\d*" | awk "{print \$3}")
-          echo "GIT_SOURCE_BRANCH_SHA=${GIT_SOURCE_BRANCH_SHA}" >> $GITHUB_ENV
+          GIT_PR_SOURCE_BRANCH_SHA=$(git log -n 1 |grep "Merge:\s*\d*\s*\d*" | awk "{print \$3}")
+          echo "GIT_PR_SOURCE_BRANCH_SHA=${GIT_PR_SOURCE_BRANCH_SHA}" >> $GITHUB_ENV
+
+      - name: Detect current application version
+        id: detect_current_app_version
+        uses: gocariq-gitops/release-actions/actionDetectCurrentAppVersion@v2
+        with:
+          docker_image_tag: "${{ env.GIT_PR_SOURCE_BRANCH_SHA }}"
 
       - name: 'Authenticate to Google Cloud'
         id: GCPAuth
@@ -88,9 +95,8 @@ jobs:
         uses: gocariq-gitops/release-actions/actionCheckDockerImage@v2
         with:
           google_project_id: ${{ inputs.project_id }}
-          docker_registry_name:  ${{ inputs.docker_registry_name }}
+          docker_registry_name: ${{ inputs.docker_registry_name }}
           docker_image_name: ${{ inputs.app_name }}
-          docker_image_tag: ${{ env.GIT_SOURCE_BRANCH_SHA }}
 
       - name: Stop if the image doesn't exist
         id: CheckImage
@@ -107,10 +113,10 @@ jobs:
           set -x
           echo "IMAGE_PATH=${{ env.IMAGE_PATH }}" >> $GITHUB_OUTPUT
           echo "CURRENT_IMAGE=${{ env.CURRENT_IMAGE }}" >> $GITHUB_OUTPUT
-          echo "GIT_SOURCE_BRANCH_SHA=${{ env.GIT_SOURCE_BRANCH_SHA }}" >> $GITHUB_OUTPUT
+          echo "CURRENT_APP_VERSION=${{ env.CURRENT_APP_VERSION }}" >> $GITHUB_OUTPUT
 
     outputs:
-      GIT_SOURCE_BRANCH_SHA: "${{ steps.export_env_vars.outputs.GIT_SOURCE_BRANCH_SHA }}"
+      CURRENT_APP_VERSION: "${{ steps.export_env_vars.outputs.CURRENT_APP_VERSION }}"
       IMAGE_PATH: "${{ steps.export_env_vars.outputs.IMAGE_PATH }}"
       CURRENT_IMAGE: "${{ steps.export_env_vars.outputs.CURRENT_IMAGE }}"
 
@@ -128,7 +134,7 @@ jobs:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}
           env_name: int
-          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          expected_git_tag: "${{ needs.check-image.outputs.CURRENT_APP_VERSION }}"
           on_not_deployed_stop: "true"
 
   # run on pull_request to main only
@@ -145,7 +151,7 @@ jobs:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}
           env_name: stage
-          expected_git_tag: "${{ needs.check-image.outputs.GIT_SOURCE_BRANCH_SHA }}"
+          expected_git_tag: "${{ needs.check-image.outputs.CURRENT_APP_VERSION }}"
           on_not_deployed_stop: "true"
 
   # run on merge to main only

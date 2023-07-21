@@ -68,12 +68,14 @@ runs:
               GCLOUD_COMMAND="gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --trigger-http"
           else
               GCLOUD_COMMAND="gcloud functions deploy ${{inputs.name}} --gen2 --runtime ${{inputs.runtime}} --memory ${{inputs.memory}} --source ${{inputs.source_dir}} --entry-point ${{inputs.entry_point}} --region ${{inputs.region}} --env-vars-file env.yaml --service-account ${{inputs.service_account}} --set-secrets ${{inputs.secrets}} --trigger-http"
+          fi
 
           if test -z ${{inputs.vpc_connector}}
           then
               GCLOUD_COMMAND="${GCLOUD_COMMAND}"
           else
               GCLOUD_COMMAND="${GCLOUD_COMMAND} --vpc-connector ${{inputs.vpc_connector}}"
+          fi
 
           echo "Executing gcloud command: ${GCLOUD_COMMAND}"
           ${GCLOUD_COMMAND}

@@ -54,7 +54,7 @@ runs:
 
       - uses: google-github-actions/setup-gcloud@v1
         with:
-          version: latest
+          version: '407.0.0'
 
       - name: login to artifact registry
         shell: bash

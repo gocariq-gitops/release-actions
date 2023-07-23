@@ -97,6 +97,7 @@ jobs:
           google_project_id: ${{ inputs.project_id }}
           docker_registry_name: ${{ inputs.docker_registry_name }}
           docker_image_name: ${{ inputs.app_name }}
+          docker_image_tag: ${{env.CURRENT_APP_VERSION}}
 
       - name: Stop if the image doesn't exist
         id: CheckImage

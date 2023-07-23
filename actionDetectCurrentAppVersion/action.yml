@@ -21,20 +21,20 @@ runs:
         
         if [[ -n "${{inputs.docker_image_tag}}" ]]; then
           GITHUB_SHA_NEW="${{inputs.docker_image_tag}}"
-          IMAGE_TAG=${GITHUB_SHA_NEW:0:7}
+          IMAGE_SHA=${GITHUB_SHA_NEW:0:7}
         elif [[ -n "${{github.event.pull_request.head.sha}}" ]]; then
           # is set only for PRs
           GITHUB_SHA_NEW=${{github.event.pull_request.head.sha}}
-          IMAGE_TAG=${GITHUB_SHA_NEW:0:7}
+          IMAGE_SHA=${GITHUB_SHA_NEW:0:7}
         else
-          IMAGE_TAG=${GITHUB_SHA:0:7}
+          IMAGE_SHA=${GITHUB_SHA:0:7}
         fi
       
         # Normalize version to SEMVER 2
         SEMVER_VALIDATOR_REGEX="^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(\.(0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(\+[0-9a-zA-Z-]+(\.[0-9a-zA-Z-]+)*)?$"
-        if [[ ! "${IMAGE_TAG}" =~ ${SEMVER_VALIDATOR_REGEX} ]]; then
-          IMAGE_TAG="${{inputs.version_null_prefix}}${IMAGE_TAG}"
+        if [[ ! "${IMAGE_SHA}" =~ ${SEMVER_VALIDATOR_REGEX} ]]; then
+          IMAGE_SHA="${{inputs.version_null_prefix}}${IMAGE_SHA}"
         fi
         
         # Export env variables
-        echo "CURRENT_APP_VERSION=$IMAGE_TAG" >> $GITHUB_ENV
+        echo "CURRENT_APP_VERSION=$IMAGE_SHA" >> $GITHUB_ENV

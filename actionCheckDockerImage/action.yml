@@ -8,6 +8,10 @@ inputs:
   docker_image_name:
     description: "Docker Image Name"
     required: true
+  docker_image_tag:
+    description: "Docker Image Name"
+    default: ""
+    required: false
   docker_registry_name:
     default: "carig"
     description: "Docker Registry Name"
@@ -25,9 +29,10 @@ runs:
     - name: Print inputs
       shell: bash
       run: |
+        echo "google_project_id - ${{inputs.google_project_id}}"
         echo "docker_registry_name - ${{inputs.docker_registry_name}}"
         echo "docker_image_name - ${{inputs.docker_image_name}}"
-        echo "google_project_id - ${{inputs.google_project_id}}"
+        echo "docker_image_tag - ${{inputs.docker_image_tag}}"
 
     - name: Docker Auth with gCloud CLI
       shell: bash
@@ -40,8 +45,7 @@ runs:
         set -x
 
         # Set variables                      
-        IMAGE_TAG=${{env.CURRENT_APP_VERSION}}
-        IMAGE_FULL_PATH="${{ inputs.registry_host }}/${{inputs.google_project_id}}/${{inputs.docker_registry_name}}/${{inputs.docker_image_name}}:$IMAGE_TAG"
+        IMAGE_FULL_PATH="${{ inputs.registry_host }}/${{inputs.google_project_id}}/${{inputs.docker_registry_name}}/${{inputs.docker_image_name}}:${{ inputs.docker_image_tag }}"
         echo "Checking docker image $IMAGE_FULL_PATH"
         echo "IMAGE_FULL_PATH='${IMAGE_FULL_PATH}'"
 

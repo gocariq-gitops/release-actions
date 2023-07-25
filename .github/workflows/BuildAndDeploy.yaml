@@ -180,15 +180,8 @@ jobs:
         with:
           java-version: ${{ inputs.java_version }}
           distribution: 'adopt'
-      - name: Check if it is NodeJS
-        if: ${{ env.IMAGE_EXIST == 'false' }}
-        shell: bash
-        run: |
-          set -x
-          [[ -z "$(find ./ -name *.js |head -n 1)" ]] && IS_JS_CODE_REPO="false" || IS_JS_CODE_REPO="true"
-          echo "IS_JS_CODE_REPO=$IS_JS_CODE_REPO" >> $GITHUB_ENV
       - name: Setup NodeJS if required (for NodeJS code only)
-        if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JS_CODE_REPO == 'true' }}
+        if: ${{ env.IMAGE_EXIST == 'false' && inputs.node_version != '' }}
         uses: actions/setup-node@v3
         with:
            node-version: ${{ inputs.node_version }}

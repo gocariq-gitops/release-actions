@@ -43,9 +43,6 @@ on:
       java_version:
         default: 11
         type: string
-      node_version:
-        default: 16
-        type: string
       go_version:
         default: 1.18.0
         type: string
@@ -166,13 +163,15 @@ jobs:
         run: |
           helm lint ./charts/${{ inputs.app_name }}/
 
-      - name: Check if it is Java
+      - name: Check Repo Language
         if: ${{ env.IMAGE_EXIST == 'false' }}
         shell: bash
         run: |
           set -x
           [[ -z "$(find ./ -name *.java |head -n 1)" ]] && IS_JAVA_CODE_REPO="false" || IS_JAVA_CODE_REPO="true"
+          [[ -z "$(cat Dockerfile |grep -r 'FROM[[:space:]]golang')" ]] && IS_GOLANG_CODE_REPO="false" || IS_GOLANG_CODE_REPO="true"
           echo "IS_JAVA_CODE_REPO=$IS_JAVA_CODE_REPO" >> $GITHUB_ENV
+          echo "IS_GOLANG_CODE_REPO=$IS_GOLANG_CODE_REPO" >> $GITHUB_ENV
       - name: Set up JDK if required (for the Java code only)
         if: ${{ env.IMAGE_EXIST == 'false' && env.IS_JAVA_CODE_REPO == 'true' }}
         id: setting-env
@@ -180,18 +179,6 @@ jobs:
         with:
           java-version: ${{ inputs.java_version }}
           distribution: 'adopt'
-      - name: Setup NodeJS if required (for NodeJS code only)
-        if: ${{ env.IMAGE_EXIST == 'false' && inputs.node_version != '' }}
-        uses: actions/setup-node@v3
-        with:
-           node-version: ${{ inputs.node_version }}
-      - name: Check if it is GoLang
-        if: ${{ env.IMAGE_EXIST == 'false' }}
-        shell: bash
-        run: |
-          set -x
-          [[ -z "$(cat Dockerfile |grep -r 'FROM[[:space:]]golang')" ]] && IS_GOLANG_CODE_REPO="false" || IS_GOLANG_CODE_REPO="true"
-          echo "IS_GOLANG_CODE_REPO=$IS_GOLANG_CODE_REPO" >> $GITHUB_ENV
       - name: Setup GoLang if required (for GoLang code only)
         if: ${{ env.IMAGE_EXIST == 'false' && env.IS_GOLANG_CODE_REPO == 'true' }}
         uses: actions/setup-go@v3

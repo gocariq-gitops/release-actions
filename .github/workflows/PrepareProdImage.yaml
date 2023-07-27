@@ -17,6 +17,10 @@ on:
       release_candidate_branch:
         default: 'release-candidate'
         type: string
+      env_suffix:
+        default: ''
+        description: "Environment suffix, it can be '-pci'"
+        type: string
 
     secrets:
       GCP_SA_GHA_IMAGEPUSH:
@@ -128,13 +132,13 @@ jobs:
       - check-image
     runs-on: ubuntu-22.04
     steps:
-      - name: Validate INT environment
+      - name: Validate 'int${{ inputs.env_suffix }}' environment
         id: Validate_INT_Environment
         uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2
         with:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}
-          env_name: int
+          env_name: "int${{ inputs.env_suffix }}"
           expected_git_tag: "${{ needs.check-image.outputs.CURRENT_APP_VERSION }}"
           on_not_deployed_stop: "true"
 
@@ -145,13 +149,13 @@ jobs:
       - check-image
     runs-on: ubuntu-22.04
     steps:
-      - name: Validate STAGE environment
+      - name: Validate 'stage${{ inputs.env_suffix }}' environment
         id: Validate_STAGE_Environment
         uses: gocariq-gitops/release-actions/actionServiceIsDeployed@v2
         with:
           token: ${{ secrets.GHA_DEVOPS_DISPATCH }}
           app_name: ${{ inputs.app_name }}
-          env_name: stage
+          env_name: "stage${{ inputs.env_suffix }}"
           expected_git_tag: "${{ needs.check-image.outputs.CURRENT_APP_VERSION }}"
           on_not_deployed_stop: "true"
 

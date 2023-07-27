@@ -61,7 +61,10 @@ on:
         default: "false"
         type: string
         description: "Use docker build arg '--build-arg token=secrets.GHA_DEVOPS_DISPATCH' if is true"
-
+      env_suffix:
+        default: ''
+        description: "Environment suffix, it can be '-pci'"
+        type: string
     secrets:
       SLACK_WEBHOOK_URL:
         required: true
@@ -102,7 +105,10 @@ jobs:
             exit 1
           fi
 
+          # Add environment suffix if set some, example: '-pci'
+          DEPLOY_ENV="${DEPLOY_ENV}${{ inputs.env_suffix }}"
           echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_OUTPUT
+
     outputs:
       DEPLOY_ENV: ${{ steps.detect-environment.outputs.DEPLOY_ENV }}
 

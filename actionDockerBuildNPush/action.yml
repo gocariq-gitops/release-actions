@@ -121,7 +121,7 @@ runs:
         cd -
         
         # Push image if it does not exist in the registry
-        if [[ "${{ inputs.dry_run }}" != "false" ]]; then
+        if [[ "${{ inputs.dry_run }}" == "false" ]]; then
           docker tag $IMAGE_TAGGED_VER $IMAGE_FULL_PATH_TAGGED_VER
           docker tag $IMAGE_LATEST $IMAGE_FULL_PATH_LATEST
           docker push $IMAGE_FULL_PATH_TAGGED_VER

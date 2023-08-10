@@ -65,6 +65,11 @@ on:
         default: ''
         description: "Environment suffix, it can be '-pci'"
         type: string
+      dry_run:
+        type: boolean
+        default: false
+        required: false
+        description: Dry Run (do not deploy if checked)
     secrets:
       SLACK_WEBHOOK_URL:
         required: true
@@ -231,8 +236,10 @@ jobs:
           generate_gcp_general_secret: ${{ inputs.generate_gcp_general_secret }}
           gcp_sa_project_accessor: ${{ secrets.GCP_SA_PROJECT_ACCESSOR }}
           gha_devops_dispatch_token: ${{secrets.GHA_DEVOPS_DISPATCH}}
+          dry_run: ${{ inputs.dry_run }}
 
       - name: Helm - build package and push
+        if: ${{ inputs.dry_run == 'false' }}
         id: helm-package-push
         uses: gocariq-gitops/release-actions/actionK8sHelm@v2
         with:
@@ -242,6 +249,7 @@ jobs:
           chart_name: ${{ inputs.app_name }}
 
       - name: GitOps update helm tag in environment repo (deploy to ${{ env.DEPLOY_ENV }})
+        if: ${{ inputs.dry_run == 'false' }}
         id: update-tag-version
         uses: gocariq-gitops/release-actions/actionHelmValuesUpdateWithWait@v2
         with:

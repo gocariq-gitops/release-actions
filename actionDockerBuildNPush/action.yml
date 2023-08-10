@@ -44,13 +44,10 @@ inputs:
     default: ""
     description: "GitHub actions DevOps dispatch token"
     required: false
-  version_null_prefix:
-    default: "0.0.0-"
-    description: "Null version prefix is used for not versioned builds with git sha, to make it SemVer 2 compatible and looks like 0.0.0-abcdef0"
-  docker_image_tag:
-    description: "Docker Image Tag"
+  dry_run:
+    description: "Dry Run (do not deploy if checked)"
+    default: "false"
     required: false
-    default: ""
 
 runs:
   using: "composite"
@@ -122,9 +119,13 @@ runs:
           DOCKER_BUILDKIT=${{inputs.docker_build_kit}} docker build ${{inputs.docker_params}} -t "$IMAGE_TAGGED_VER" -t "$IMAGE_LATEST" .
         fi
         cd -
-  
+        
         # Push image if it does not exist in the registry
-        docker tag $IMAGE_TAGGED_VER $IMAGE_FULL_PATH_TAGGED_VER
-        docker tag $IMAGE_LATEST $IMAGE_FULL_PATH_LATEST
-        docker push $IMAGE_FULL_PATH_TAGGED_VER
-        docker push $IMAGE_FULL_PATH_LATEST
+        if [[ "${{ inputs.dry_run }}" != "false" ]]; then
+          docker tag $IMAGE_TAGGED_VER $IMAGE_FULL_PATH_TAGGED_VER
+          docker tag $IMAGE_LATEST $IMAGE_FULL_PATH_LATEST
+          docker push $IMAGE_FULL_PATH_TAGGED_VER
+          docker push $IMAGE_FULL_PATH_LATEST
+        else
+          echo "Dry Run mode, no image is pushed to the registry."
+        fi

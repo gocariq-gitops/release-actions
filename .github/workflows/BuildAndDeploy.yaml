@@ -66,8 +66,8 @@ on:
         description: "Environment suffix, it can be '-pci'"
         type: string
       dry_run:
-        type: boolean
-        default: false
+        default: "false"
+        type: string
         required: false
         description: Dry Run (do not deploy if checked)
     secrets:

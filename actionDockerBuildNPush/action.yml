@@ -98,7 +98,7 @@ runs:
       run: |
         set -x
   
-        # Set variables                      
+        # Set variables
         IMAGE_TAGGED_VER="${{inputs.docker_image_name}}:${{env.CURRENT_APP_VERSION}}"
         IMAGE_LATEST="${{inputs.docker_image_name}}:latest"
         IMAGE_FULL_PATH_TAGGED_VER="${{inputs.registry_host}}/${{inputs.google_project_id}}/${{inputs.docker_registry_name}}/${IMAGE_TAGGED_VER}"

@@ -111,7 +111,13 @@ jobs:
             DEPLOY_ENV="${{ inputs.deploy_env }}"
           fi
 
-          # Cancel on an attempt to deploy to a non-testing environment
+          # Cancel an attempt to deploy to the STAGE from the not-allowed branch
+          if [[ "${DEPLOY_ENV}" == "stage" && ( "${GITHUB_HEAD_REF}" != 'main' || "${GITHUB_HEAD_REF}" != 'release-candidate' ) ]]; then
+            echo "Deployment to the STAGE environment is allowed from the 'main' and 'release-candidate' branches only."
+            exit 1
+          fi
+
+          # Cancel an attempt to deploy to a non-testing environment
           if [[ "${DEPLOY_ENV}" != "dev" && "${DEPLOY_ENV}" != "int"  && "${DEPLOY_ENV}" != "stage"  ]]; then
             echo "Deployment to PROD is not allowed, use 'release-manifest' for deployment to PROD."
             exit 1

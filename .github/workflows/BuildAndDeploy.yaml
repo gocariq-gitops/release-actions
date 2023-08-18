@@ -159,12 +159,6 @@ jobs:
           exit_code: ${{ inputs.scan_exit_code }}
           repo_name: ${{ inputs.app_name }}
 
-      - name: stop
-        id: stop
-        shell: bash
-        run: |
-            exit 1
-
       - name: 'Authenticate to Google Cloud'
         id: GCPAuth
         uses: gocariq-gitops/release-actions/actionGCPAuth@v2

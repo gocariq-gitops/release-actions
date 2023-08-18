@@ -77,6 +77,9 @@ on:
         default: ""
         type: string
         description: "Trigger Test Suites if test_suites_file_name parameter is not empty"
+      scan_exit_code:
+        default: "0"
+        type: string
     secrets:
       SLACK_WEBHOOK_URL:
         required: true
@@ -139,6 +142,28 @@ jobs:
           webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Check out repository security-scan
+        uses: actions/checkout@v3
+        with:
+          repository: gocariq/security-scan
+          token: ${{secrets.gha_devops_dispatch}}
+          path: ./scan
+
+      - name: Security Repo Scan
+        id: SecurityRepoScan
+        uses: gocariq-gitops/release-actions/actionScanRepo@repo_scan
+        with:
+          exit_code: ${{ inputs.scan_exit_code }}
+          repo_name: ${{ inputs.app_name }}
+
+      - name: stop
+        id: stop
+        shell: bash
+        run: |
+            exit 1
 
       - name: 'Authenticate to Google Cloud'
         id: GCPAuth

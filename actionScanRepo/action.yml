@@ -1,0 +1,39 @@
+name: "Security Repo Scan"
+description: "Action for detecting and preventing hardcoded secrets like passwords, api keys, and tokens in git repos"
+
+inputs:
+  exit_code:
+    description: "Exit code when leaks have been encountered (default 1)"
+    default: "1"
+  repo_name:
+    description: "Repository name"
+    required: true
+  log-level:
+    description: "log level (trace, debug, info, warn, error, fatal) (default info)"
+    default: "info"
+
+runs:
+  using: "composite"
+  steps:
+
+    - name: Scan Repository
+      shell: bash
+      run: |
+        set -x
+        if test -e "./scan/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore"; then
+            echo "Gitleaksignore File exists for repository ${{ inputs.repo_name }}"
+            cp -f ./scan/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore .
+        else
+            echo "Gitleaksignore File does not exist for repository ${{ inputs.repo_name }}"
+            echo "" > .gitleaksignore
+        fi
+
+        # Set variables
+        GIT_REPO_DIR=$(pwd)
+
+        docker run -v $GIT_REPO_DIR:/home/${{ inputs.repo_name }} \
+                    zricethezav/gitleaks:latest \
+                    detect --verbose \
+                    --source=/home/${{ inputs.repo_name }} \
+                    --exit-code ${{ inputs.exit_code }} \
+                    --log-level ${{ inputs.log-level }}

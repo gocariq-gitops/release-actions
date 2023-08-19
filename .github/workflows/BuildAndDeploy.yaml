@@ -112,7 +112,7 @@ jobs:
           fi
 
           # Cancel an attempt to deploy to the STAGE from the not-allowed branch
-          if [[ "${DEPLOY_ENV}" == "stage" && ( "${GITHUB_HEAD_REF}" != 'main' || "${GITHUB_HEAD_REF}" != 'release-candidate' ) ]]; then
+          if [[ "${DEPLOY_ENV}" == "stage" && ( "${{github.ref}}" != 'main' || "${{github.ref}}" != 'release-candidate' ) ]]; then
             echo "Deployment to the STAGE environment is allowed from the 'main' and 'release-candidate' branches only."
             exit 1
           fi

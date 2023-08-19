@@ -105,16 +105,11 @@ jobs:
         shell: bash
         run: |
           set -x
+          
           if [[ -z "${{ inputs.deploy_env }}" ]]; then
             DEPLOY_ENV=${{ inputs.deploy_env_on_push }}
           else
             DEPLOY_ENV="${{ inputs.deploy_env }}"
-          fi
-
-          # Cancel an attempt to deploy to the STAGE from the not-allowed branch
-          if [[ "${DEPLOY_ENV}" == "stage" && ( "${{github.ref}}" != 'main' || "${{github.ref}}" != 'release-candidate' ) ]]; then
-            echo "Deployment to the STAGE environment is allowed from the 'main' and 'release-candidate' branches only."
-            exit 1
           fi
 
           # Cancel an attempt to deploy to a non-testing environment
@@ -126,6 +121,18 @@ jobs:
           # Add environment suffix if set some, example: '-pci'
           DEPLOY_ENV="${DEPLOY_ENV}${{ inputs.env_suffix }}"
           echo "DEPLOY_ENV=$DEPLOY_ENV" >> $GITHUB_OUTPUT
+
+      - name: Check if deployment to stage is allowed
+        if: ${{ github.ref != 'refs/heads/main' && github.ref != 'refs/heads/release-candidate' }}
+        id: detect-environment
+        shell: bash
+        run: |
+          set -x
+          if [[ "${DEPLOY_ENV}" == "stage" ]]; then
+            echo "Deployment to the STAGE environment is allowed from the 'main' and 'release-candidate' branches only."
+          fi
+          exit 1
+
 
     outputs:
       DEPLOY_ENV: ${{ steps.detect-environment.outputs.DEPLOY_ENV }}

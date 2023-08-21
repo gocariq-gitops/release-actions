@@ -45,9 +45,10 @@ runs:
                     zricethezav/gitleaks:latest \
                     detect --verbose \
                     --source=/home/${{ inputs.repo_name }} \
+                    --config=/home/${{ inputs.repo_name }}/allowlist.toml \
                     --exit-code ${{ inputs.exit_code }} \
                     --log-level ${{ inputs.log-level }}
-                    #   --config=/home/${{ inputs.repo_name }}/allowlist.toml \
+
         ls -la
         rm -rf ${{ inputs.gitleaks_checkout_folder}}
         ls -la

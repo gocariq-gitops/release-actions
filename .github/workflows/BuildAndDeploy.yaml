@@ -163,6 +163,12 @@ jobs:
           repo_name: ${{ inputs.app_name }}
           gitleaks_checkout_folder: ${{ inputs.gitleaks_checkout_folder }}
 
+      - name: test
+        shell: bash
+        run: |
+          exit 1
+
+
       - name: 'Authenticate to Google Cloud'
         id: GCPAuth
         uses: gocariq-gitops/release-actions/actionGCPAuth@v2

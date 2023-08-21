@@ -44,11 +44,10 @@ runs:
         docker run -v $GIT_REPO_DIR:/home/${{ inputs.repo_name }} \
                     zricethezav/gitleaks:latest \
                     detect --verbose \
-                    --config=/home/${{ inputs.repo_name }}/allowlist.toml \
                     --source=/home/${{ inputs.repo_name }} \
                     --exit-code ${{ inputs.exit_code }} \
                     --log-level ${{ inputs.log-level }}
-
+                    #   --config=/home/${{ inputs.repo_name }}/allowlist.toml \
         ls -la
         rm -rf ${{ inputs.gitleaks_checkout_folder}}
         ls -la

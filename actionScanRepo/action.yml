@@ -41,7 +41,7 @@ runs:
 
         # Set variables
         GIT_REPO_DIR=$(pwd)
-
+        ls -la
         docker run -v $GIT_REPO_DIR:/home/${{ inputs.repo_name }} \
                     zricethezav/gitleaks:latest \
                     detect --verbose \

@@ -8,6 +8,9 @@ inputs:
   repo_name:
     description: "Repository name"
     required: true
+  gitleaks_checkout_folder:
+    description: "Folder for Gitleaks configurations"
+    required: true
   log-level:
     description: "log level (trace, debug, info, warn, error, fatal) (default info)"
     default: "info"
@@ -20,12 +23,20 @@ runs:
       shell: bash
       run: |
         set -x
-        if test -e "./scan/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore"; then
+        if test -e "${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore"; then
             echo "Gitleaksignore File exists for repository ${{ inputs.repo_name }}"
-            cp -f ./scan/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore .
+            cp -f ${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore .
         else
             echo "Gitleaksignore File does not exist for repository ${{ inputs.repo_name }}"
             echo "" > .gitleaksignore
+        fi
+
+        if test -e "${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/allowlist.toml"; then
+            echo "Gitleaks Configuration File exists for repository ${{ inputs.repo_name }}"
+            cp -f ${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/allowlist.toml .
+        else
+            echo "Gitleaksignore File does not exist for repository ${{ inputs.repo_name }}"
+            echo "" > allowlist.toml
         fi
 
         # Set variables
@@ -34,6 +45,11 @@ runs:
         docker run -v $GIT_REPO_DIR:/home/${{ inputs.repo_name }} \
                     zricethezav/gitleaks:latest \
                     detect --verbose \
+                    --config=allowlist.toml
                     --source=/home/${{ inputs.repo_name }} \
                     --exit-code ${{ inputs.exit_code }} \
                     --log-level ${{ inputs.log-level }}
+
+        ls -la
+        rm -rf ${{ inputs.gitleaks_checkout_folder}}
+        ls -la

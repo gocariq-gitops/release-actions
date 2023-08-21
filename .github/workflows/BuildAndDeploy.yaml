@@ -80,6 +80,9 @@ on:
       scan_exit_code:
         default: "0"
         type: string
+      gitleaks_checkout_folder:
+        default: "./scan"
+        type: string
     secrets:
       SLACK_WEBHOOK_URL:
         required: true
@@ -150,7 +153,7 @@ jobs:
         with:
           repository: gocariq/security-scan
           token: ${{secrets.gha_devops_dispatch}}
-          path: ./scan
+          path: ${{ inputs.gitleaks_checkout_folder }}
 
       - name: Security Repo Scan
         id: SecurityRepoScan
@@ -158,6 +161,7 @@ jobs:
         with:
           exit_code: ${{ inputs.scan_exit_code }}
           repo_name: ${{ inputs.app_name }}
+          gitleaks_checkout_folder: ${{ inputs.gitleaks_checkout_folder }}
 
       - name: 'Authenticate to Google Cloud'
         id: GCPAuth

@@ -49,6 +49,4 @@ runs:
                     --exit-code ${{ inputs.exit_code }} \
                     --log-level ${{ inputs.log-level }}
 
-        ls -la
         rm -rf ${{ inputs.gitleaks_checkout_folder}}
-        ls -la

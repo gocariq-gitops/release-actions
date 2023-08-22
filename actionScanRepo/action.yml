@@ -13,7 +13,7 @@ inputs:
     required: true
   log-level:
     description: "log level (trace, debug, info, warn, error, fatal) (default info)"
-    default: "debug"
+    default: "info"
 
 runs:
   using: "composite"
@@ -23,13 +23,13 @@ runs:
       shell: bash
       run: |
         set -x
-        # if test -e "${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore"; then
-        #     echo "Gitleaksignore File exists for repository ${{ inputs.repo_name }}"
-        #     cp -f ${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore .
-        # else
-        #     echo "Gitleaksignore File does not exist for repository ${{ inputs.repo_name }}"
-        #     echo "" > .gitleaksignore
-        # fi
+        if test -e "${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore"; then
+            echo "Gitleaksignore File exists for repository ${{ inputs.repo_name }}"
+            cp -f ${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/.gitleaksignore .
+        else
+            echo "Gitleaksignore File does not exist for repository ${{ inputs.repo_name }}"
+            echo "" > .gitleaksignore
+        fi
 
         if test -e "${{ inputs.gitleaks_checkout_folder}}/gitleaksignore/${{ inputs.repo_name }}/allowlist.toml"; then
             echo "Gitleaks Configuration File exists for repository ${{ inputs.repo_name }}"

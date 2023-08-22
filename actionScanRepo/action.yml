@@ -13,7 +13,7 @@ inputs:
     required: true
   log-level:
     description: "log level (trace, debug, info, warn, error, fatal) (default info)"
-    default: "info"
+    default: "debug"
 
 runs:
   using: "composite"

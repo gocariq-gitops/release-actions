@@ -1,5 +1,5 @@
 # action will be run in python3 container
-FROM python:3
+FROM python:3.11
 # copying requirements.txt and install the action dependencies
 COPY requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt
